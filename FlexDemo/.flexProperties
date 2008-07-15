@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<flexProperties version="1" toolCompile="true" flexServerType="2" serverRoot="D:\codes\forFlexWeb\PivotBrowser\WebRoot" serverRootURL="http://localhost:8080/PivotBrowser" serverContextRoot="/PivotBrowser"/>
+<flexProperties version="1" toolCompile="true" flexServerType="2" serverRoot="E:\projects\PivotBrowser\codes\trunk\PivotBrowser\WebRoot" serverRootURL="http://localhost:8080/PivotBrowser" serverContextRoot="/PivotBrowser"/>

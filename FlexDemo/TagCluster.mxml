@@ -11,6 +11,10 @@
 			// datas in tagcluster
 			[Bindable]
 			public var tags:ArrayCollection;
+			
+			// pic in tagcluser
+			[Bindable]
+			public var pics:ArrayCollection;
 
 			// ask searchview to do bigger
 			public var bigger:Function;
@@ -29,6 +33,9 @@
 			
 			// whether tags in tagcluster is active
 			public var isActive:Boolean = true;
+			
+			[Bindable]
+			public var hasPics:Boolean = false;
 
 			private function tagClick(tag:String):void
 			{
@@ -62,6 +69,20 @@
 			
 			public function doInitTagCluster(cw:int, ch:int, xo:int=0, yo:int=0):void
 			{
+				var i:int = 0;
+				
+				if (hasPics && pics != null && pics.length > 0)
+				{
+					hboxPics.height = cw / 3;
+					var imgs:Array = [img1, img2, img3];
+					for (i=0; i<3 && i<pics.length; ++i)
+					{
+						imgs[i].width = cw / 3 - 5;
+						imgs[i].source = pics.getItemAt(i);
+					}
+					ch -= hboxPics.height;
+				}
+				
 				//trace(index+":TagCluster.doInitTagCluster(cw:int="+cw+", ch:int="+ch+") begin");
 				if (lbtns == null || lbtns.length == 0)
 				{
@@ -76,7 +97,6 @@
 				lbtnMore.visible = false;
 				
 				// replace all linkbuttons
-				var i:int = 0;
 				for (i=1; i<lbtns.length; i++)
 				{
 					// check current row
@@ -129,7 +149,7 @@
 			private function moreClick():void
 			{
 				//trace(index+":TagCluster.moreClick() begin");
-				bigger(index);
+				//bigger(index);
 				
 			}
 			
@@ -141,14 +161,28 @@
 			}
 		]]>
 	</mx:Script>
-	<mx:Repeater id="rp" dataProvider="{tags}">
-		<mx:LinkButton id="lbtns" height="20" maxWidth="72"
-			styleName="tagLinkButton"
-		    label="{rp.currentItem.label}" 
-		    click="if (isActive) tagClick(event.currentTarget.label); event.stopPropagation();"/>
-    </mx:Repeater>
-    <mx:LinkButton id="lbtnMore" height="20" width="18"
-		styleName="tagLinkButton"
-	    label="..." visible="false"
-	    click="if (isActive) moreClick(); event.stopPropagation();"/>
+	<mx:VBox width="100%" height="100%"
+		verticalScrollPolicy="off" horizontalScrollPolicy="off">
+		<mx:HBox id="hboxPics" width="100%" height="0" 
+			verticalScrollPolicy="off" horizontalScrollPolicy="off"
+			visible="{hasPics}">
+			<mx:Image id="img1"/>
+			<mx:Image id="img2"/>
+			<mx:Image id="img3"/>
+		</mx:HBox>
+		<mx:Canvas width="100%" height="100%"
+			verticalScrollPolicy="off" horizontalScrollPolicy="off">
+			<mx:Repeater id="rp" dataProvider="{tags}">
+				<mx:LinkButton id="lbtns" height="20" maxWidth="72"
+					styleName="tagLinkButton"
+				    label="{rp.currentItem.label}" 
+				    click="if (isActive) tagClick(event.currentTarget.label); event.stopPropagation();"/>
+		    </mx:Repeater>
+		    <mx:LinkButton id="lbtnMore" height="20" width="18"
+				styleName="tagLinkButton"
+			    label="..." visible="false"
+			    click="if (isActive) moreClick(); event.stopPropagation();"/>
+		</mx:Canvas>
+	</mx:VBox>
+	
 </mx:Canvas>

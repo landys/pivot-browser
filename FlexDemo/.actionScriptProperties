@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <actionScriptProperties version="1" mainApplicationPath="FlexDemo.mxml">
-  <compiler additionalCompilerArguments="-services &quot;D:\codes\forFlexWeb\PivotBrowser\WebRoot\WEB-INF\flex\services-config.xml&quot; -locale en_US" copyDependentFiles="true" generateAccessible="false" strict="true" warn="true" htmlGenerate="true" htmlPlayerVersionCheck="true" htmlPlayerVersion="9.0.0" htmlExpressInstall="true" htmlHistoryManagement="true" outputFolderPath="bin" outputFolderLocation="D:\codes\forFlexWeb\PivotBrowser\WebRoot\FlexDemo">
+  <compiler additionalCompilerArguments="-services &quot;E:\projects\PivotBrowser\codes\trunk\PivotBrowser\WebRoot\WEB-INF\flex\services-config.xml&quot; -locale en_US" copyDependentFiles="true" generateAccessible="false" strict="true" warn="true" htmlGenerate="true" htmlPlayerVersionCheck="true" htmlPlayerVersion="9.0.0" htmlExpressInstall="true" htmlHistoryManagement="true" outputFolderPath="bin" outputFolderLocation="F:\apache-tomcat-6.0.16\webapps\PivotBrowser\FlexDemo">
     <compilerSourcePath/>
     <libraryPath>
       <libraryPathEntry kind="3" path="${FRAMEWORKS}/libs/playerglobal.swc" linkType="2"/>
@@ -10,7 +10,7 @@
       <libraryPathEntry kind="3" path="${FRAMEWORKS}/libs/rpc.swc" linkType="1"/>
       <libraryPathEntry kind="3" path="${FRAMEWORKS}/libs/charts.swc" linkType="1" sourcepath="${FRAMEWORKS}/source"/>
       <libraryPathEntry kind="1" path="${FRAMEWORKS}/locale/{locale}" linkType="1"/>
-      <libraryPathEntry kind="3" path="D:\codes\forFlexWeb\PivotBrowser\WebRoot\WEB-INF\flex\libs\fds.swc" linkType="1"/>
+      <libraryPathEntry kind="3" path="E:\projects\PivotBrowser\codes\trunk\PivotBrowser\WebRoot\WEB-INF\flex\libs\fds.swc" linkType="1"/>
     </libraryPath>
     <sourceAttachmentPath>
       <sourceAttachmentPathEntry kind="3" path="${FRAMEWORKS}/libs/flex.swc" linkType="1" sourcepath="${FRAMEWORKS}/source"/>

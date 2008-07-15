@@ -19,7 +19,7 @@
 		<link>
 			<name>bin</name>
 			<type>2</type>
-			<location>D:/codes/forFlexWeb/PivotBrowser/WebRoot/FlexDemo</location>
+			<location>F:/apache-tomcat-6.0.16/webapps/PivotBrowser/FlexDemo</location>
 		</link>
 	</linkedResources>
 </projectDescription>

@@ -39,14 +39,14 @@
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
 			// size of each cluster
-			private var sCluster:Object = {w:180, h:70};
+			private var sCluster:Object = {w:200, h:140};
 			
 			// shape of all clusters
 			[Bindable]
 			private var sCls:ArrayCollection = new ArrayCollection(
-				[{x:76, y:0, w:sCluster.w, h:sCluster.h},//0
-				{x:394, y:0, w:sCluster.w, h:sCluster.h},//3
-				{x:76, y:156, w:sCluster.w, h:sCluster.h},//2
+				[{x:23, y:80, w:sCluster.w, h:sCluster.h},//0
+				{x:235, y:80, w:sCluster.w, h:sCluster.h},//3
+				{x:447, y:80, w:sCluster.w, h:sCluster.h},//2
 				{x:394, y:156, w:sCluster.w, h:sCluster.h},//5
 				{x:26, y:77, w:sCluster.w, h:sCluster.h},//1
 				{x:441, y:77, w:sCluster.w, h:sCluster.h}]);//4				
@@ -54,22 +54,22 @@
 			// shape of all HRules
 			[Bindable]
 			private var sHrs:ArrayCollection = new ArrayCollection(
-				[{x:237, y:60, w:100, h:2, r:30},//0
-				{x:324, y:111, w:100, h:2, r:-30},//3
-				{x:238, y:161, w:100, h:2, r:-30},//2
+				[{x:sCls[0].x+sCluster.w/2, y:sCls[0].y+5, w:150, h:2, r:-10},//0
+				{x:sCls[1].x+sCluster.w/2, y:sCls[1].y+5, w:40, h:2, r:-90},//3
+				{x:sCls[2].x+sCluster.w/2, y:sCls[2].y+5, w:150, h:2, r:190},//2
 				{x:321, y:110, w:100, h:2, r:30},//5
 				{x:182, y:111, w:142, h:2, r:0},//1
 				{x:322, y:111, w:142, h:2, r:0}]);//4
 				
 			// the size of beginning center cluster	
-			private var sClCenter:Object = {x:113, y:18, w:360, h:180}; 
+			private var sClCenter:Object = {x:133, y:18, w:360, h:180}; 
 			
 			// the size of center cluster
 			//private var sClC:Object = {x:258, y:74, w:140, h:70}; 
-			private var sClC:Object = {x:258, y:59, w:140, h:100}; 
+			private var sClC:Object = {x:133, y:5, w:360, h:60}; 
 			
-			// place of center of clusters
-			private var pCenter:Object = {x:295, y:102};
+			// place of center of clusters, one endpoint of the Hrs.
+			private var pCenter:Object = {x:sClC.x+sClC.w/2, y:sClC.y+sClC.h-5};
 			
 			// begin, only one cluster
 			private var isOnly:Boolean;
@@ -86,7 +86,7 @@
 			private var parShowAll:Parallel;
 			
 			// most number of clusters on the screen
-			private var ncMost:int = 6;
+			private var ncMost:int = 3;
 			
 			// all clusters related to center tag
 			// it must be assigned every change
@@ -316,6 +316,9 @@
 					selectedClusterIndex = 0;
 				}
 				cls[0].setStyleName("clusterCanvasPicked");
+				clsWhole.tags = cls[0].tags;
+				clsWhole.pics = cls[0].pics;
+				clsWhole.initTagCluster();
 				
 				if (tagsSearched.length > 0)
 				{
@@ -541,6 +544,9 @@
 						cls[selectedClusterIndex].setStyleName("clusterCanvas");
 						cls[index].setStyleName("clusterCanvasPicked");
 						selectedClusterIndex = index;
+						clsWhole.tags = cls[selectedClusterIndex].tags;
+						clsWhole.pics = cls[selectedClusterIndex].pics;
+						clsWhole.initTagCluster();
 					}
 				}
 				//trace("SearchView.showSmallerCluster(index:int) end");
@@ -669,14 +675,33 @@
 
 				for (var i:int=0; i<ncReal; i++)
 				{
-					var temp:ArrayCollection = new ArrayCollection();
+					var tempb:ArrayCollection = new ArrayCollection();
+					var tempc:ArrayCollection = new ArrayCollection();
 					var b:ArrayCollection = ArrayCollection(clusters[offset+i].tagList);
-					for (var j:int=0; j<b.length; j++)
+					var c:ArrayCollection = ArrayCollection(clusters[offset+i].picUrlList);
+					var j:int = 0;
+					if (b != null) 
 					{
-						temp.addItem({label: b[j].tagName});
+						for (j=0; j<b.length; j++)
+						{
+							tempb.addItem({label: b[j].tagName});
+						}
+					}
+					if (c != null)
+					{
+						for (j=0; j<c.length; j++)
+						{
+							tempc.addItem(c[j]);
+						}
+					}
+					if (tempc.length == 0) {
+						tempc.addItem("assets/mondorana.jpg");
+						tempc.addItem("assets/mondorana.jpg");
+						tempc.addItem("assets/mondorana.jpg");
 					}
 
-					cls[i].tags = temp;
+					cls[i].tags = tempb;
+					cls[i].pics = tempc;
 				}
 			}
 			
@@ -807,7 +832,8 @@
 			{
 				if (!isOnly && expandClusBig.target.index >= 6)
 				{
-					clusCenter.initTagCluster(15, 10);
+					//clusCenter.initTagCluster(15, 10);
+					clusCenter.initTagCluster();
 				}
 				else
 				{
@@ -819,7 +845,8 @@
 			{
 				if (!isOnly && contractClusBig.target.index >= 6)
 				{
-					clusCenter.initTagCluster(15, 10);
+					//clusCenter.initTagCluster(15, 10);
+					clusCenter.initTagCluster();
 				}
 				else
 				{
@@ -908,7 +935,7 @@
 			</mx:VBox>
 			<mx:Spacer width="10"/>
 			<!-- input text & tag relation graph-->
-			<mx:VBox width="650" height="100%">
+			<mx:VBox width="670" height="100%">
 				<mx:Spacer height="10"/>
 				<mx:Canvas width="100%">
 					<mx:Label text="Tags:" y="2" styleName="label"/>
@@ -929,13 +956,13 @@
 						id="navPrevClus"
 						toolTip="Previous Page"
 						imgWidth="12" imgHeight="12"
-						x="0" y="92"
+						x="0" y="135"
 					    click="showPrevClusPage()" />
 					<hisa:NavButton source="{ICON_RIGHT}" 
 						id="navNextClus"
 						toolTip="Next Page"
 						imgWidth="12" imgHeight="12"
-						x="623" y="92"
+						x="643" y="135"
 					    click="showNextClusPage()" />
 					<!--clipContent="false"-->
 					<mx:Repeater id="rpHrs" dataProvider="{sHrs}">
@@ -945,7 +972,7 @@
 					<mx:Repeater id="rpCls" dataProvider="{sCls}">
 						<hisa:TagCluster id="cls" index="{rpCls.currentIndex}"
 							bigger="{showBiggerCluster}" smaller="{showSmallerCluster}"
-							viewTag="{viewTag}" visible="false"/>
+							viewTag="{viewTag}" visible="false" hasPics="true"/>
 					</mx:Repeater>
 						
 					<!--
@@ -960,6 +987,9 @@
 		
 		<!-- image view -->
 		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
+			<hisa:TagCluster id="clsWhole" index="100"
+					visible="true" hasPics="true"
+					width="180" height="100%"/>
 			<hisa:NavButton source="{ICON_LEFT}" 
 				id="navPrevPic"
 				toolTip="Previous Page"
@@ -1003,9 +1033,12 @@
         blurYFrom="5.0" blurYTo="0.0"/>
             
     <mx:Dissolve id="dissolveOut" duration="500" alphaFrom="1.0" alphaTo="0.0"/>
+    <!--
     <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" 
     	effectEnd="if (isOnly) clusCenter.initTagCluster(); else clusCenter.initTagCluster(15, 10);"/>
-    	
+    -->
+    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" 
+    	effectEnd="clusCenter.initTagCluster();"/>	
 	<mx:Resize id="expand" target="{imgBig}" widthTo="300" heightTo="300"/>
     <mx:Resize id="contract" target="{imgBig}" widthTo="120" heightTo="120"/>
     

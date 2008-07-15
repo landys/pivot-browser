@@ -13,5 +13,19 @@ package hisa.dataQueryVO
 		//该cluster内部的pic url
 		
 		public picUrlList:ArrayCollection;
+		
+		public function TagClusterVO(cluster:Object=null)
+		{
+			if (cluster != null)
+			{
+				fill(cluster);
+			}
+		}
+		
+		public function fill(cluster:Object):void 
+		{
+			this.tagList = cluster.tagList;
+			this.picUrlList = cluster.picUrlList;
+		}
 	}
 }
