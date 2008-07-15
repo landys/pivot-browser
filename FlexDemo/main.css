@@ -117,6 +117,12 @@ ToolTip
 	backgroundColor:	#b0b0b0
 }
 
+.clusterCanvasWhole
+{
+	borderStyle:	solid;
+	backgroundColor:	#b0b0b0
+}
+
 .clusterCanvasCircle
 {
 	borderStyle:	solid;

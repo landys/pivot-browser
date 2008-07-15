@@ -40,7 +40,10 @@
 			private function tagClick(tag:String):void
 			{
 				//trace(index+":TagCluster.tagClick(tag:String="+tag+") begin");
-				viewTag(tag, index);
+				if (viewTag != null) 
+				{
+					viewTag(tag, index);
+				}
 			}
 			
 			private function appRollOver():void
@@ -149,15 +152,20 @@
 			private function moreClick():void
 			{
 				//trace(index+":TagCluster.moreClick() begin");
-				//bigger(index);
-				
+				if (bigger != null)
+				{
+					bigger(index);
+				}
 			}
 			
 			private function lessClick():void
 			{
 				//trace(index+":TagCluster.moreClick() begin");
 				// show smaller and get pictures
-				smaller(index);
+				if (smaller != null)
+				{
+					smaller(index);
+				}
 			}
 		]]>
 	</mx:Script>
@@ -172,7 +180,7 @@
 		</mx:HBox>
 		<mx:Canvas width="100%" height="100%"
 			verticalScrollPolicy="off" horizontalScrollPolicy="off">
-			<mx:Repeater id="rp" dataProvider="{tags}">
+			<mx:Repeater id="rp" dataProvider="{tags}" updateComplete="initTagCluster();">
 				<mx:LinkButton id="lbtns" height="20" maxWidth="72"
 					styleName="tagLinkButton"
 				    label="{rp.currentItem.label}" 

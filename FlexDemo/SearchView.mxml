@@ -203,6 +203,7 @@
 				navNextClus.visible = false;
 				clusCenter.setStyleName("clusterCanvas");
 				cls[selectedClusterIndex].setStyleName("clusterCanvas");
+				clsWhole.setStyleName("clusterCanvasWhole");
 				selectedClusterIndex = 0;
 				
 				searchRO.getTagCloud(20);
@@ -233,6 +234,7 @@
 			{
 				//trace("SearchView.showClusterTags(event:EffectEvent) begin");
 				event.currentTarget.children[0].target.initTagCluster();
+				clsWhole.initTagCluster();
 			}
 			
 			// view a tag and its relative clusters
@@ -315,10 +317,7 @@
 					cls[selectedClusterIndex].setStyleName("clusterCanvas");
 					selectedClusterIndex = 0;
 				}
-				cls[0].setStyleName("clusterCanvasPicked");
-				clsWhole.tags = cls[0].tags;
-				clsWhole.pics = cls[0].pics;
-				clsWhole.initTagCluster();
+				cls[0].setStyleName("clusterCanvasPicked");		
 				
 				if (tagsSearched.length > 0)
 				{
@@ -546,7 +545,6 @@
 						selectedClusterIndex = index;
 						clsWhole.tags = cls[selectedClusterIndex].tags;
 						clsWhole.pics = cls[selectedClusterIndex].pics;
-						clsWhole.initTagCluster();
 					}
 				}
 				//trace("SearchView.showSmallerCluster(index:int) end");
@@ -627,7 +625,7 @@
 				clusters = ArrayCollection(event.result);
 				curClusPage = 0;
 				
-				assignClusPage();
+				assignClusPage();	
 				
 				if (cls[0].tags != null)
 				{
@@ -703,6 +701,9 @@
 					cls[i].tags = tempb;
 					cls[i].pics = tempc;
 				}
+				
+				clsWhole.tags = cls[0].tags;
+				clsWhole.pics = cls[0].pics;
 			}
 			
 			private function layoutAllClusters():void
@@ -838,6 +839,7 @@
 				else
 				{
 					expandClusBig.target.initTagCluster();
+					clsWhole.initTagCluster();
 				}
 			}
 			
@@ -851,6 +853,7 @@
 				else
 				{
 					contractClusBig.target.initTagCluster();
+					clsWhole.initTagCluster();
 				}
 			}
 			
@@ -971,7 +974,7 @@
 					
 					<mx:Repeater id="rpCls" dataProvider="{sCls}">
 						<hisa:TagCluster id="cls" index="{rpCls.currentIndex}"
-							bigger="{showBiggerCluster}" smaller="{showSmallerCluster}"
+							smaller="{showSmallerCluster}" 
 							viewTag="{viewTag}" visible="false" hasPics="true"/>
 					</mx:Repeater>
 						
