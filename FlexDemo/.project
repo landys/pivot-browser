@@ -17,9 +17,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>bin</name>
+			<name>bin-debug</name>
 			<type>2</type>
-			<location>D:/codes/forFlexWeb/PivotBrowser/WebRoot/FlexDemo</location>
+			<location>E:/projects/PivotBrowser/codes/trunk/PivotBrowser/WebRoot/FlexDemo</location>
 		</link>
 	</linkedResources>
 </projectDescription>

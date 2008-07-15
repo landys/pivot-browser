@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright (C) 2003-2006 Adobe Macromedia Software LLC and its licensors.
+// All Rights Reserved.
+// The following is Sample Code and is subject to all restrictions on such code
+// as contained in the End User License Agreement accompanying this product.
+// If you have received this file from a source other than Adobe,
+// then your use, modification, or distribution of it requires
+// the prior written permission of Adobe.
+//
+////////////////////////////////////////////////////////////////////////////////
+-->
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*" 	
+    xmlns:hisa="hisa.view.*" initialize="loadResources()"
+	width="100%" height="100%" 
+	show="onShow(event)" resize="carousel.reset()">
+	
+	<mx:Script>
+		<![CDATA[
+		import hisa.view.Gallery;
+		import mx.events.FlexEvent;
+		import mx.resources.*;
+		
+		[Embed(source="assets/icon_left.png")]
+		private const ICON_LEFT:Class;
+		
+		[Embed(source="assets/icon_right.png")]		
+		private const ICON_RIGHT:Class;
+		
+		[Embed(source="assets/icon_left_disabled.png")]
+		private const ICON_LEFT_DISABLED:Class;
+		
+		[Embed(source="assets/icon_right_disabled.png")]
+		private const ICON_RIGHT_DISABLED:Class;
+		
+		[Bindable]
+		private var listViewtooltip:String;
+		[Bindable]
+		private var slideShowTooltip:String;
+		[Bindable]
+		private var nextWord:String;
+		[Bindable]
+		private var previousWord:String; 
+	
+		private function loadResources():void
+		{
+			listViewtooltip = "listViewtooltipKey";
+			slideShowTooltip = "slideShowTooltipKey";
+			nextWord = "nextWordKey";
+			previousWord = "previousWordKey";
+		}
+		
+		
+		private var _gallery:Gallery;
+		
+		[Bindable]
+		public function get gallery():Gallery
+		{
+			return _gallery;
+		}
+		
+		public function set gallery(value:Gallery):void
+		{
+			_gallery = value;
+		}
+		
+		private function showPrev():void
+		{
+			if (gallery.selected > 0)
+			{
+				nextPhoto.img.source = ICON_RIGHT;
+				gallery.selected = gallery.selected - 1;
+				carousel.rotateRight();
+				
+				if (gallery.selected <= 0)
+					prevPhoto.img.source = ICON_LEFT_DISABLED;
+			} 
+		}
+		
+		private function showNext():void
+		{
+			if (gallery.selected < gallery.photos.length - 1)
+			{
+				prevPhoto.img.source = ICON_LEFT;
+				gallery.selected = gallery.selected + 1;
+				carousel.rotateLeft();
+				
+				if (gallery.selected >= gallery.photos.length - 1)
+					nextPhoto.img.source = ICON_RIGHT_DISABLED;
+			} 
+		}
+		
+		private function onShow(event:FlexEvent):void
+		{
+			photoDescription.text = gallery.photos.getItemAt(gallery.selected).description;
+			
+			if (gallery.selected == 0)
+				prevPhoto.img.source = ICON_LEFT_DISABLED;
+			else
+				prevPhoto.img.source = ICON_LEFT;
+
+			if (gallery.selected >= gallery.photos.length - 1)
+				nextPhoto.img.source = ICON_RIGHT_DISABLED;				
+			else 
+				nextPhoto.img.source = ICON_RIGHT;				
+
+			carousel.reset();
+		}
+		]]>
+	</mx:Script>
+	<mx:VBox width="100%" height="100%" horizontalAlign="center" horizontalCenter="0" >
+	
+		<hisa:Carousel id="carousel" gallery="{gallery}" 
+		    width="100%" height="100%"
+		    verticalCenter="0" horizontalCenter="0"/>
+		
+		<mx:HBox y="10" width="50%" height="40" horizontalCenter="0">
+		
+			<NavButton source="{ICON_LEFT}" 
+				id="prevPhoto"
+				toolTip="{previousWord}"
+				imgWidth="12" imgHeight="12"
+			    click="showPrev()" />		
+			    		
+<!--			<mx:Text id="photoDescription" 
+				text="{gallery.photos.getItemAt(gallery.selected).description}" 
+				width="100%" height="100%" 
+				styleName="photoDescription" 
+				textAlign="center"/>-->
+				
+			<NavButton source="{ICON_RIGHT}" 
+				id="nextPhoto"
+				toolTip="{nextWord}"
+				imgWidth="12" imgHeight="12"
+			    click="showNext()" />		
+		</mx:HBox>
+		
+<!--		<mx:Label id="photoName" text="{gallery.photos.getItemAt(gallery.selected).name}" 
+			horizontalCenter="0"
+			width="200" height="20" bottom="0" 
+			styleName="photoName"  textAlign="center"/> -->
+		
+	</mx:VBox>
+	
+</mx:Canvas>
