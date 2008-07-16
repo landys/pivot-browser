@@ -39,16 +39,16 @@
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
 			// size of each cluster
-			private var sCluster:Object = {w:200, h:140};
+			private var sCluster:Object = {w:190, h:112};
 			
 			// shape of all clusters
 			[Bindable]
 			private var sCls:ArrayCollection = new ArrayCollection(
-				[{x:23, y:80, w:sCluster.w, h:sCluster.h},//0
-				{x:235, y:80, w:sCluster.w, h:sCluster.h},//3
-				{x:447, y:80, w:sCluster.w, h:sCluster.h},//2
-				{x:394, y:156, w:sCluster.w, h:sCluster.h},//5
-				{x:26, y:77, w:sCluster.w, h:sCluster.h},//1
+				[{x:26, y:80, w:sCluster.w, h:sCluster.h},//0
+				{x:228, y:80, w:sCluster.w, h:sCluster.h},//3
+				{x:430, y:80, w:sCluster.w, h:sCluster.h},//2
+				{x:632, y:80, w:sCluster.w, h:sCluster.h},//5
+				{x:26, y:80, w:sCluster.w, h:sCluster.h},//1
 				{x:441, y:77, w:sCluster.w, h:sCluster.h}]);//4				
 			
 			// shape of all HRules
@@ -62,11 +62,11 @@
 				{x:322, y:111, w:142, h:2, r:0}]);//4
 				
 			// the size of beginning center cluster	
-			private var sClCenter:Object = {x:133, y:18, w:360, h:180}; 
+			private var sClCenter:Object = {x:200, y:18, w:420, h:166}; 
 			
 			// the size of center cluster
 			//private var sClC:Object = {x:258, y:74, w:140, h:70}; 
-			private var sClC:Object = {x:133, y:5, w:360, h:60}; 
+			private var sClC:Object = {x:sClCenter.x, y:5, w:sClCenter.w, h:53}; 
 			
 			// place of center of clusters, one endpoint of the Hrs.
 			private var pCenter:Object = {x:sClC.x+sClC.w/2, y:sClC.y+sClC.h-5};
@@ -86,7 +86,7 @@
 			private var parShowAll:Parallel;
 			
 			// most number of clusters on the screen
-			private var ncMost:int = 3;
+			private var ncMost:int = 4;
 			
 			// all clusters related to center tag
 			// it must be assigned every change
@@ -913,8 +913,8 @@
 
 	<mx:VBox width="100%" height="100%" styleName="colorPanel">
 		<!-- search input area -->
-		<mx:HBox width="100%" height="272">
-			<mx:VBox id="canSelected" width="250" height="100%" horizontalAlign="center">
+		<mx:HBox width="100%" height="248">
+			<mx:VBox id="canSelected" width="236" height="100%" horizontalAlign="center">
 				<mx:Image id="imgLogo" width="100%" height="50" 
 					source="@Embed('assets/logo.gif')" maintainAspectRatio="false"/>
 				<mx:Canvas width="100%" height="100%" borderStyle="solid"
@@ -938,19 +938,19 @@
 			</mx:VBox>
 			<mx:Spacer width="10"/>
 			<!-- input text & tag relation graph-->
-			<mx:VBox width="670" height="100%">
-				<mx:Spacer height="10"/>
+			<mx:VBox width="850" height="100%">
+				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
-					<mx:Label text="Tags:" y="2" styleName="label"/>
-					<mx:TextInput id="inputTag" width="151" x="38"/>
-					<mx:Label text="TopK:" x="188" styleName="label" y="2"/>
-					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" x="227" width="59" />
-					<mx:Label text="Cluster:" x="286" styleName="label" y="2"/>
-					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" x="338" width="54" />
-					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" x="395" width="86"  y="3"/>
-					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" x="475" width="68"  y="3"/>
-					<mx:Button label="Search" x="538" width="51" click="onSearchClick();"/>
-					<mx:Button label="Restart" x="591" width="56" click="onRestartClick();"/>
+					<mx:Label text="Tags:" y="2" styleName="label" x="6"/>
+					<mx:TextInput id="inputTag" width="189" x="47"/>
+					<mx:Label text="TopK:" x="249" styleName="label" y="2"/>
+					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" x="292" width="65" />
+					<mx:Label text="Cluster:" x="362" styleName="label" y="2"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" x="416" width="60" />
+					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" x="488" width="86"  y="3"/>
+					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" x="579" width="68"  y="3"/>
+					<mx:Button label="Search" x="676" width="64" click="onSearchClick();"/>
+					<mx:Button label="Restart" x="749" width="64" click="onRestartClick();"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -992,7 +992,7 @@
 		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
 			<hisa:TagCluster id="clsWhole" index="100"
 					visible="true" hasPics="true"
-					width="180" height="100%"/>
+					width="210" height="100%"/>
 			<hisa:NavButton source="{ICON_LEFT}" 
 				id="navPrevPic"
 				toolTip="Previous Page"
