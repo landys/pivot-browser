@@ -138,7 +138,7 @@ public class SearchService {
      * 
      */
     public List<TagCluster> searchTag (List<String> rawList) throws Exception {
-        return searchTag(rawList,Constants.topK,true,true);
+        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,true,true);
     }
     
     
@@ -197,7 +197,7 @@ public class SearchService {
      * k 
      * 
      */ 
-    public List<TagCluster> searchTag (List<String> rawList,int topKInSelectTag, boolean isExpansion, boolean isCluster) throws Exception, Exception {
+    public List<TagCluster> searchTag (List<String> rawList,int topKInSelectTag, int maxClusterNum, boolean isExpansion, boolean isCluster) throws Exception, Exception {
         List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(rawList,indexService.getDataInput().getTagIndex(),isExpansion);
         List<TagCluster> list = new ArrayList<TagCluster>();
         
@@ -207,7 +207,7 @@ public class SearchService {
         select = new SelectTag(topKInSelectTag,pivotTagList,indexService.getDataInput());
         
         if (isCluster) {
-            tagsCluster = new ClusterTag(Constants.maxClusterNum,
+            tagsCluster = new ClusterTag(maxClusterNum,
                     Constants.maxClusterNum, select);
             Map<Set<Long>, Double> clusters = tagsCluster.getClusters();
             // ¶ÔÃ¿¸öcluster
