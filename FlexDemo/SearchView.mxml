@@ -55,10 +55,10 @@
 			// shape of all HRules
 			[Bindable]
 			private var sHrs:ArrayCollection = new ArrayCollection(
-				[{x:sCls[0].x+sCluster.w/2, y:sCls[0].y+5, w:150, h:2, r:-10},//0
-				{x:sCls[1].x+sCluster.w/2, y:sCls[1].y+5, w:40, h:2, r:-90},//3
-				{x:sCls[2].x+sCluster.w/2, y:sCls[2].y+5, w:150, h:2, r:190},//2
-				{x:321, y:110, w:100, h:2, r:30},//5
+				[{x:sCls[0].x+sCluster.w/2, y:sCls[0].y+5, w:200, h:2, r:-10},//0
+				{x:sCls[1].x+sCluster.w/2, y:sCls[1].y+5, w:100, h:2, r:-30},//3
+				{x:sCls[2].x+sCluster.w/2, y:sCls[2].y+5, w:100, h:2, r:-150},//2
+				{x:sCls[3].x+sCluster.w/2, y:sCls[3].y+5, w:200, h:2, r:-170},//5
 				{x:182, y:111, w:142, h:2, r:0},//1
 				{x:322, y:111, w:142, h:2, r:0}]);//4
 				
@@ -70,7 +70,7 @@
 			private var sClC:Object = {x:sClCenter.x, y:5, w:sClCenter.w, h:53}; 
 			
 			// place of center of clusters, one endpoint of the Hrs.
-			private var pCenter:Object = {x:sClC.x+sClC.w/2, y:sClC.y+sClC.h-5};
+			private var pCenter:Object = {x:sClC.x+sClC.w/2, y:sClC.y+sClC.h/2};
 			
 			// begin, only one cluster
 			private var isOnly:Boolean;
@@ -522,7 +522,7 @@
 				{
 					// get pictures
 					picPage = 0;
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + index].tagList), tagsSearched, picPage);		
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[ncMost * curClusPage + index].tagList), tagsSearched, picPage);		
 					rbtnColor.enabled = false;
 					rbtnWavelet.enabled = false;
 					rbtnColor.selected = false;
@@ -621,7 +621,7 @@
 				
 				if (cls[0].tags != null)
 				{
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage].tagList), tagsSearched, picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[ncMost * curClusPage].tagList), tagsSearched, picPage);
 				}
 				// layout tags in center cluster
 				var temp:ArrayCollection = new ArrayCollection();
@@ -683,12 +683,13 @@
 							tempc.addItem(c[j]);
 						}
 					}
+					/*
 					if (tempc.length == 0) {
 						tempc.addItem("assets/mondorana.jpg");
 						tempc.addItem("assets/mondorana.jpg");
 						tempc.addItem("assets/mondorana.jpg");
 					}
-
+					*/
 					cls[i].tags = tempb;
 					cls[i].pics = tempc;
 				}
@@ -773,12 +774,11 @@
 					}
 					else if (rbtnRandom.visible && rbtnRandom.selected)
 					{
-						searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, --picPage);
-						//searchRO.getPicUrlForTagsRandom(tagsSearched, --picPage);
+						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, --picPage);
 					}
 					else
 					{
-						searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, --picPage);
+						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, --picPage);
 					}
 				}
 			}
@@ -795,12 +795,11 @@
 				}
 				else if (rbtnRandom.visible && rbtnRandom.selected)
 				{
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, ++picPage);
-					//searchRO.getPicUrlForTagsRandom(tagsSearched, ++picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, ++picPage);
 				}
 				else
 				{
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, ++picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, ++picPage);
 				}
 			}	
 			
@@ -854,8 +853,7 @@
 				else
 				{
 					imgSelected.blendMode=BlendMode.OVERLAY;
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, picPage);
-					//searchRO.getPicUrlForTagsRandom(tagsSearched, picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, picPage);
 				}
 				imgSelected.visible = false;
 				imgSelected.visible = true;
@@ -935,13 +933,13 @@
 						id="navPrevClus"
 						toolTip="Previous Page"
 						imgWidth="12" imgHeight="12"
-						x="0" y="135"
+						x="0" y="125"
 					    click="showPrevClusPage()" />
 					<hisa:NavButton source="{ICON_RIGHT}" 
 						id="navNextClus"
 						toolTip="Next Page"
 						imgWidth="12" imgHeight="12"
-						x="643" y="135"
+						x="823" y="125"
 					    click="showNextClusPage()" />
 					<!--clipContent="false"-->
 					<mx:Repeater id="rpHrs" dataProvider="{sHrs}">
