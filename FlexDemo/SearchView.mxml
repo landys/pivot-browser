@@ -171,7 +171,6 @@
 					par.addChild(res);
 					par.addChild(mov);
 					
-					par.addEventListener(EffectEvent.EFFECT_END, showClusterTags);
 					// add to all effect
 					parShowAll.addChild(par);
 				}
@@ -227,14 +226,6 @@
 					cls[i].visible = true;
 					hrs[i].visible = true;
 				}
-			}
-			
-			// show all tags in cluster
-			private function showClusterTags(event:EffectEvent):void
-			{
-				//trace("SearchView.showClusterTags(event:EffectEvent) begin");
-				event.currentTarget.children[0].target.initTagCluster();
-				clsWhole.initTagCluster();
 			}
 			
 			// view a tag and its relative clusters
@@ -638,7 +629,6 @@
 					temp.addItem({label: tagsSearched[i]});
 				}
 				clusCenter.tags = temp;
-				//clusCenter.initTagCluster();
 				//clusCenter.visible = true;
 				
 				dissolveIn.end();
@@ -711,12 +701,6 @@
 				// play effect
 				parShowAll.end();
 				parShowAll.play();
-				/*
-				for (var i:int=0; i<ncReal; i++)
-				{
-					cls[i].initTagCluster();
-				}
-				*/
 			}
 			
 			private function showPrevClusPage():void
@@ -827,34 +811,6 @@
 					re.addItem(ar[i].tagName);
 				}
 				return re;
-			}	
-			
-			private function afterExpandCluster():void
-			{
-				if (!isOnly && expandClusBig.target.index >= 6)
-				{
-					//clusCenter.initTagCluster(15, 10);
-					clusCenter.initTagCluster();
-				}
-				else
-				{
-					expandClusBig.target.initTagCluster();
-					clsWhole.initTagCluster();
-				}
-			}
-			
-			private function afterContractCluster():void
-			{
-				if (!isOnly && contractClusBig.target.index >= 6)
-				{
-					//clusCenter.initTagCluster(15, 10);
-					clusCenter.initTagCluster();
-				}
-				else
-				{
-					contractClusBig.target.initTagCluster();
-					clsWhole.initTagCluster();
-				}
 			}
 			
 			private function onSearchClick():void
@@ -975,7 +931,7 @@
 					<mx:Repeater id="rpCls" dataProvider="{sCls}">
 						<hisa:TagCluster id="cls" index="{rpCls.currentIndex}"
 							smaller="{showSmallerCluster}" 
-							viewTag="{viewTag}" visible="false" hasPics="true"/>
+							viewTag="{viewTag}"  styleName="clusterCanvas" visible="false" hasPics="true"/>
 					</mx:Repeater>
 						
 					<!--
@@ -983,7 +939,7 @@
 					-->
 					<hisa:TagCluster id="clusCenter" index="6"
 						bigger="{showBiggerCluster}" smaller="{showSmallerCluster}" 
-						viewTag="{viewTag}"/>	
+						viewTag="{viewTag}" styleName="clusterCanvasCircle" />	
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
@@ -992,7 +948,7 @@
 		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
 			<hisa:TagCluster id="clsWhole" index="100"
 					visible="true" hasPics="true"
-					width="210" height="100%"/>
+					width="210" height="100%" styleName="clusterCanvasWhole" />
 			<hisa:NavButton source="{ICON_LEFT}" 
 				id="navPrevPic"
 				toolTip="Previous Page"
@@ -1036,27 +992,20 @@
         blurYFrom="5.0" blurYTo="0.0"/>
             
     <mx:Dissolve id="dissolveOut" duration="500" alphaFrom="1.0" alphaTo="0.0"/>
-    <!--
-    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" 
-    	effectEnd="if (isOnly) clusCenter.initTagCluster(); else clusCenter.initTagCluster(15, 10);"/>
-    -->
-    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" 
-    	effectEnd="clusCenter.initTagCluster();"/>	
+    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" />	
 	<mx:Resize id="expand" target="{imgBig}" widthTo="300" heightTo="300"/>
     <mx:Resize id="contract" target="{imgBig}" widthTo="120" heightTo="120"/>
     
     <!-- expand one cluster	-->
     <mx:Parallel id="expandClusBig" duration="500">
         <mx:Move id="moveExClusBig" />
-        <mx:Resize id="resExClusBig" 
-    		effectEnd="afterExpandCluster();"/>
+        <mx:Resize id="resExClusBig" />
     </mx:Parallel>
 
 	<!-- contract one cluster -->
     <mx:Parallel id="contractClusBig" duration="300">
         <mx:Move id="moveConClusBig"/>
-        <mx:Resize id="resConClusBig"
-    		effectEnd="afterContractCluster();"/>
+        <mx:Resize id="resConClusBig"/>
     </mx:Parallel>
     
 </mx:Canvas>
