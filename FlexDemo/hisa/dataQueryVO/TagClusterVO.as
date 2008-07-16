@@ -1,10 +1,10 @@
-package hisa.dataQueryVO
+package hisa.vo
 {
 	import mx.collections.ArrayCollection;
 	
 	[Managed]
 	[RemoteClass(alias="model.TagCluster")]
-	public class TagClusterVO
+	public class TagClusterVo
 	{
 		//该cluster内的tag
 		//排好序的
@@ -14,7 +14,7 @@ package hisa.dataQueryVO
 		
 		public picUrlList:ArrayCollection;
 		
-		public function TagClusterVO(cluster:Object=null)
+		public function TagClusterVo(cluster:Object=null)
 		{
 			if (cluster != null)
 			{

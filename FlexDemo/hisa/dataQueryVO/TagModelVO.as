@@ -1,8 +1,8 @@
-package hisa.dataQueryVO
+package hisa.vo
 {
 	[Managed]
 	[RemoteClass(alias="model.TagModel")]
-	public class TagModelVO
+	public class TagModelVo
 	{
 		//tag名字
 		public tagName:String;
