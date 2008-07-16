@@ -4,6 +4,7 @@
 	creationComplete="initApp()">
 	<mx:Script>
 		<![CDATA[
+			import hisa.event.ClusterClickEvent;
 			import mx.events.ItemClickEvent;
 			import mx.rpc.events.ResultEvent;
 			import mx.collections.ArrayCollection;
@@ -859,6 +860,25 @@
 				imgSelected.visible = false;
 				imgSelected.visible = true;
 			}
+			
+			// cluster click handler
+			private function clusterClickHandler(event:ClusterClickEvent):void
+			{
+				switch (event.detailTarget)
+				{
+				case ClusterClickEvent.MORE_TARGET:
+					//showBiggerCluster(event.index);
+					// do nothing now.
+					break;
+				case ClusterClickEvent.TAG_TARGET:
+					viewTag(String(event.data), event.index);
+					break;
+				case ClusterClickEvent.VACANCY_TARGET:
+				case ClusterClickEvent.PIC_TARGET:
+					showSmallerCluster(event.index);
+					break;
+				}
+			}
 		]]>
 	</mx:Script>
 	
@@ -930,16 +950,16 @@
 					
 					<mx:Repeater id="rpCls" dataProvider="{sCls}">
 						<hisa:TagCluster id="cls" index="{rpCls.currentIndex}"
-							smaller="{showSmallerCluster}" 
-							viewTag="{viewTag}"  styleName="clusterCanvas" visible="false" hasPics="true"/>
+							clusterClick="clusterClickHandler(event)"
+							styleName="clusterCanvas" visible="false" hasPics="true"
+							useHandCursor="true" buttonMode="true"/>
 					</mx:Repeater>
 						
 					<!--
 					<hisa:Tag id="tagCenter" x="293.5" y="102" text="TagCenter" visible="false"/>
 					-->
 					<hisa:TagCluster id="clusCenter" index="6"
-						bigger="{showBiggerCluster}" smaller="{showSmallerCluster}" 
-						viewTag="{viewTag}" styleName="clusterCanvasCircle" />	
+						clusterClick="clusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
@@ -947,7 +967,7 @@
 		<!-- image view -->
 		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
 			<hisa:TagCluster id="clsWhole" index="100"
-					visible="true" hasPics="true"
+					visible="true" hasPics="true" isActive="false"
 					width="210" height="100%" styleName="clusterCanvasWhole" />
 			<hisa:NavButton source="{ICON_LEFT}" 
 				id="navPrevPic"

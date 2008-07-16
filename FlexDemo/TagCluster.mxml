@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
 	horizontalScrollPolicy="off" verticalScrollPolicy="off"
-	click="if (isActive) lessClick(); event.stopPropagation();"
-	rollOver="appRollOver();" updateComplete="initTagCluster();">
+	click="wholeClick(event);"
+	updateComplete="initTagCluster();">
+	<mx:Metadata>
+		[Event(name="clusterClick", type="hisa.event.ClusterClickEvent")]
+	</mx:Metadata>
+	
 	<mx:Script>
 		<![CDATA[
+			import hisa.event.ClusterClickEvent;
 			import mx.controls.LinkButton;
 			import mx.collections.ArrayCollection;
 			
@@ -15,45 +20,15 @@
 			// pic in tagcluser
 			[Bindable]
 			public var pics:ArrayCollection;
-
-			// ask searchview to do bigger
-			public var bigger:Function;
-
-			// ask searchview to do smaller
-			public var smaller:Function;
-			
-			// tag click
-			public var viewTag:Function;
 			
 			// use as the tagCluster id
 			public var index:int;
 			
-			// whether do initTagCluster at creationComplete
-			public var isDoInit:Boolean = true;
-			
-			// whether tags in tagcluster is active
+			// whether tags in tagcluster is active, means it can accept click.
 			public var isActive:Boolean = true;
 			
 			[Bindable]
 			public var hasPics:Boolean = false;
-
-			private function tagClick(tag:String):void
-			{
-				//trace(index+":TagCluster.tagClick(tag:String="+tag+") begin");
-				if (viewTag != null) 
-				{
-					viewTag(tag, index);
-				}
-			}
-			
-			private function appRollOver():void
-			{
-				if (index < 6)
-				{
-					useHandCursor=true;
-					buttonMode=true;
-				}
-			}
 			
 			public function setStyleName(name:String):void
 			{
@@ -149,23 +124,45 @@
 			}
 			
 			// click more button
-			private function moreClick():void
+			private function moreClick(event:MouseEvent):void
 			{
-				//trace(index+":TagCluster.moreClick() begin");
-				if (bigger != null)
-				{
-					bigger(index);
-				}
+				var clusterEvent:ClusterClickEvent = new ClusterClickEvent(ClusterClickEvent.CLUSTER_CLICK, index, 
+					ClusterClickEvent.MORE_TARGET);
+				doDispatchEvent(clusterEvent, event);
 			}
 			
-			private function lessClick():void
+			// click the tag
+			private function tagClick(event:MouseEvent):void
 			{
-				//trace(index+":TagCluster.moreClick() begin");
-				// show smaller and get pictures
-				if (smaller != null)
+				var clusterEvent:ClusterClickEvent = new ClusterClickEvent(ClusterClickEvent.CLUSTER_CLICK, 
+						index, ClusterClickEvent.TAG_TARGET, event.currentTarget.label);
+				doDispatchEvent(clusterEvent, event);		
+				
+			}
+			
+			// click any place of the vacant
+			private function wholeClick(event:MouseEvent):void
+			{
+				var clusterEvent:ClusterClickEvent = new ClusterClickEvent(ClusterClickEvent.CLUSTER_CLICK, index);
+				doDispatchEvent(clusterEvent, event);
+			}
+			
+			// click the pic
+			private function picClick(event:MouseEvent, picIndex:int):void
+			{
+				var clusterEvent:ClusterClickEvent = new ClusterClickEvent(ClusterClickEvent.CLUSTER_CLICK, index, 
+					ClusterClickEvent.PIC_TARGET, picIndex);
+				doDispatchEvent(clusterEvent, event); 
+			}
+			
+			private function doDispatchEvent(clusterEvent:ClusterClickEvent, origEvent:Event):void
+			{
+				if (isActive) 
 				{
-					smaller(index);
+					dispatchEvent(clusterEvent);
 				}
+				
+				origEvent.stopPropagation();
 			}
 		]]>
 	</mx:Script>
@@ -174,9 +171,9 @@
 		<mx:HBox id="hboxPics" width="100%" height="0" 
 			verticalScrollPolicy="off" horizontalScrollPolicy="off"
 			visible="{hasPics}">
-			<mx:Image id="img1"/>
-			<mx:Image id="img2"/>
-			<mx:Image id="img3"/>
+			<mx:Image id="img1" click="picClick(event, 0);"/>
+			<mx:Image id="img2" click="picClick(event, 1);"/>
+			<mx:Image id="img3" click="picClick(event, 2);"/>
 		</mx:HBox>
 		<mx:Canvas width="100%" height="100%"
 			verticalScrollPolicy="off" horizontalScrollPolicy="off">
@@ -184,12 +181,12 @@
 				<mx:LinkButton id="lbtns" height="20" maxWidth="72"
 					styleName="tagLinkButton"
 				    label="{rp.currentItem.label}" 
-				    click="if (isActive) tagClick(event.currentTarget.label); event.stopPropagation();"/>
+				    click="tagClick(event);"/>
 		    </mx:Repeater>
 		    <mx:LinkButton id="lbtnMore" height="20" width="18"
 				styleName="tagLinkButton"
 			    label="..." visible="false"
-			    click="if (isActive) moreClick(); event.stopPropagation();"/>
+			    click="moreClick(event);"/>
 		</mx:Canvas>
 	</mx:VBox>
 	
