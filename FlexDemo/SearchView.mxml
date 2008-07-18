@@ -29,10 +29,7 @@
 			
 			[Embed(source="assets/icon_right_disabled.png")]
 			private const ICON_RIGHT_DISABLED:Class;
-			
-			[Bindable]
-			private var photoArray:ArrayCollection = new ArrayCollection();
-			
+
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
 			// size of each cluster
@@ -122,6 +119,9 @@
 			
 			[Bindable]
 			private var isCluster:Boolean = true; 
+			
+			// the count of processing remote call
+			private var remoteCallCount:int = 0;
 			
 			private function initApp():void
 			{
@@ -232,6 +232,21 @@
 				selectedClusterIndex = 0;
 				
 				searchRO.getTagCloud(20);
+				disableApplication();
+			}
+			
+			private function disableApplication():void
+			{
+				++remoteCallCount;
+				Application.application.enabled = false;
+			}
+			
+			private function enableApplication():void
+			{
+				if (--remoteCallCount <= 0)
+				{
+					Application.application.enabled = true;
+				}
 			}
 			
 			private function setAllNotVisible():void
@@ -392,6 +407,7 @@
 					navNextClus.visible = false;
 					setAllNotVisible();
 					searchRO.searchTag(tagsSearched, topKInSelectTag, maxClusterNum, isExpansion, isCluster);
+					disableApplication();
 				}
 			}
          
@@ -423,34 +439,7 @@
 				
 				picPage = 0;
 				searchRO.getPicUrlForColorRank(null, picPage, selectedPic);
-			} 
-			
-			private function showBigPhoto(event:Event):void
-			{
-				/*
-				//trace("SearchView.showBigPhoto(event:Event) begin");
-				var img:Image = Image(event.currentTarget);
-				imgBig.source = img.source;
-				imgBig.x = 0;
-				imgBig.y = 0;
-				imgBig.width = img.width;
-				imgBig.height = img.height;
-				imgBig.visible = true;
-				imgBig.toolTip = String(tlstPhotos.selectedIndex);
-				expand.end();
-				expand.play();
-				*/
-			}
-			
-			private function hindBigPhoto(event:Event):void
-			{
-				/*
-				//trace("SearchView.hindBigPhoto(event:Event) begin");
-				contract.end();
-				contract.play();
-				unblurImage.play();
-				imgBig.visible=false;
-				*/
+				disableApplication();
 			}
 			
 			private function doResize(resize:Parallel):void
@@ -595,6 +584,7 @@
 					// get pictures
 					picPage = 0;
 					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(index)].tagList), tagsSearched, picPage);		
+					disableApplication();
 					rbtnColor.enabled = false;
 					rbtnWavelet.enabled = false;
 					rbtnColor.selected = false;
@@ -645,7 +635,8 @@
 			
 			private function faultHandler(event:FaultEvent):void
 			{
-				Alert.show("fault: "+event.message);
+				Alert.show("fault: "+event.message);			
+				enableApplication();
 				//trace("fault: "+event.message);
 			}
 			
@@ -654,7 +645,8 @@
 				//trace("SearchView.getPicUrlForTagsHandler(event:ResultEvent) begin");
 				var a:ArrayCollection = ArrayCollection(event.result);
 				//inputTag.text = a[0];
-				photoArray.removeAll();
+				
+				var photos:ArrayCollection = new ArrayCollection();
 				var i:int;
 				if (tagsSearched != null && tagsSearched.length > 0)
 				{
@@ -672,9 +664,12 @@
 				
 				for (i=0; i<a.length; i++)
 				{	
-					photoArray.addItem({source: a.getItemAt(i), toolTip: toolTip, 
-						showBigPhoto: showBigPhoto, hindBigPhoto: hindBigPhoto});
+					photos.addItem({source: a.getItemAt(i), toolTip: toolTip});
 				}
+				
+				imgView.photos = photos;
+				
+				enableApplication();
 				
 				//trace("SearchView.getPicUrlForTagsHandler(event:ResultEvent) ends");
 			}
@@ -709,6 +704,8 @@
 				clusCenter.tags = tagsCenter;
 				dissolveIn.end();
 				dissolveIn.play();
+				
+				enableApplication();
 				//trace("SearchView.getTagCloudHandler(event:ResultEvent) end");
 			}
 			
@@ -723,6 +720,7 @@
 				if (cls[0].tags != null)
 				{
 					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(0)].tagList), tagsSearched, picPage);
+					disableApplication();
 				}
 				// layout tags in center cluster
 				var temp:ArrayCollection = new ArrayCollection();
@@ -753,6 +751,8 @@
 				{
 					navNextClus.visible = false;
 				}
+								
+				enableApplication();
 				//trace("SearchView.searchTagHandler(event:ResultEvent) end");
 			}
 			
@@ -899,18 +899,22 @@
 					if (rbtnColor.visible && rbtnColor.selected)
 					{
 						searchRO.getPicUrlForColorRank(null, --picPage, selectedPic);
+						disableApplication();
 					}
 					else if (rbtnWavelet.visible && rbtnWavelet.selected)
 					{
 						searchRO.getPicUrlForWaveLetRank(null, --picPage, selectedPic);
+						disableApplication();
 					}
 					else if (rbtnRandom.visible && rbtnRandom.selected)
 					{
 						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, --picPage);
+						disableApplication();
 					}
 					else
 					{
 						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, --picPage);
+						disableApplication();
 					}
 				}
 			}
@@ -919,19 +923,23 @@
 			{
 				if (rbtnColor.visible && rbtnColor.selected)
 				{
-					searchRO.getPicUrlForColorRank(null, ++picPage, selectedPic)
+					searchRO.getPicUrlForColorRank(null, ++picPage, selectedPic);
+					disableApplication();
 				}
 				else if (rbtnWavelet.visible && rbtnWavelet.selected)
 				{
-					searchRO.getPicUrlForWaveLetRank(null, ++picPage, selectedPic)
+					searchRO.getPicUrlForWaveLetRank(null, ++picPage, selectedPic);
+					disableApplication();
 				}
 				else if (rbtnRandom.visible && rbtnRandom.selected)
 				{
 					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, ++picPage);
+					disableApplication();
 				}
 				else
 				{
 					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, ++picPage);
+					disableApplication();
 				}
 			}	
 			
@@ -975,17 +983,20 @@
 				if (label == "color")
 				{
 					imgSelected.blendMode=BlendMode.NORMAL;
-					searchRO.getPicUrlForColorRank(null, picPage, selectedPic);	
+					searchRO.getPicUrlForColorRank(null, picPage, selectedPic);
+					disableApplication();
 				}
 				else if (label == "wavelet")
 				{
 					imgSelected.blendMode=BlendMode.NORMAL;
 					searchRO.getPicUrlForWaveLetRank(null, picPage, selectedPic);
+					disableApplication();
 				}
 				else
 				{
 					imgSelected.blendMode=BlendMode.OVERLAY;
 					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, picPage);
+					disableApplication();
 				}
 				imgSelected.visible = false;
 				imgSelected.visible = true;
@@ -1013,7 +1024,7 @@
 	</mx:Script>
 	
 	<mx:RemoteObject id="searchRO" destination="dataQuery_SearchService"
-		fault="faultHandler(event)"/>
+		fault="faultHandler(event)" showBusyCursor="true"/>
 
 	<mx:NumberValidator id="vldTopK" source="{txtTopKInSelectTag}" property="text"/>
 
@@ -1093,30 +1104,22 @@
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
-		
+
 		<!-- image view -->
 		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
 			<hisa:TagCluster id="clsWhole" index="100"
 					visible="true" hasPics="true" isActive="false"
 					width="210" height="100%" styleName="clusterCanvasWhole" />
-			<hisa:NavButton source="{ICON_LEFT}" 
+			<hisa:NavButton source="{ICON_LEFT}"
 				id="navPrevPic"
 				toolTip="Previous Page"
 				imgWidth="12" imgHeight="12"
-			    click="showPrevPicPage()" />		
-			<mx:Canvas width="100%" height="100%">
-				<mx:TileList id="tlstPhotos" height="100%" width="100%" 
-		            rowHeight="120" columnWidth="120"
-		            dataProvider="{photoArray}" itemRenderer="Thumbnail">
-		            <!--dragEnabled="true" dropEnabled="true" dragMoveEnabled="true"-->
-		        </mx:TileList>
-				<mx:Image id="imgBig" visible="false" 
-					rollOverEffect="{blurImage}"
-					rollOutEffect="{unblurImage}"
-					click="hindBigPhoto(event);"
-					/>
-			</mx:Canvas>
-			<hisa:NavButton source="{ICON_RIGHT}" 
+			    click="showPrevPicPage()" />
+
+			<!-- image view -->
+			<hisa:ImageView id="imgView" width="100%" height="100%"/>
+
+			<hisa:NavButton source="{ICON_RIGHT}"
 				id="navNextPic"
 				toolTip="Next Page"
 				imgWidth="12" imgHeight="12"
@@ -1134,17 +1137,10 @@
         blurXFrom="20.0" blurXTo="0.0" 
         blurYFrom="20.0" blurYTo="0.0" 
         color="0xffb000"/>
-    <mx:Blur id="blurImage" duration="500" 
-        blurXFrom="0.0" blurXTo="5.0" 
-        blurYFrom="0.0" blurYTo="5.0"/>
-    <mx:Blur id="unblurImage" duration="100" 
-        blurXFrom="5.0" blurXTo="0.0" 
-        blurYFrom="5.0" blurYTo="0.0"/>
+
             
     <mx:Dissolve id="dissolveOut" duration="500" alphaFrom="1.0" alphaTo="0.0"/>
     <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" />	
-	<mx:Resize id="expand" target="{imgBig}" widthTo="300" heightTo="300"/>
-    <mx:Resize id="contract" target="{imgBig}" widthTo="120" heightTo="120"/>
     
     <!-- expand one cluster	-->
     <mx:Parallel id="expandClusBig" duration="500">

@@ -125,9 +125,10 @@
     	    rollOverEffect="{glowImage}" 
             rollOutEffect="{unglowImage}"
             mouseMove="dragMe(event, imgPhoto, 'img');"
-            click="photoClick(event);"
             updateComplete="imgUrl=data.source;"/>
-            <!--mouseDown="data.hindBigPhoto(event)"/>-->
+            <!--click="photoClick(event);"
+            updateComplete="imgUrl=data.source;"/>
+            mouseDown="data.hindBigPhoto(event)"/>-->
 	</mx:Canvas>
 	
     <mx:states>
