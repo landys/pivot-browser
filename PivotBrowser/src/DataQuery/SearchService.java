@@ -138,7 +138,7 @@ public class SearchService {
      * 
      */
     public List<TagCluster> searchTag (List<String> rawList) throws Exception {
-        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,true,true);
+        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,true,true,true, Constants.minFreqTime, Constants.topKForExpension);
     }
     
     
@@ -197,8 +197,8 @@ public class SearchService {
      * k 
      * 
      */ 
-    public List<TagCluster> searchTag (List<String> rawList,int topKInSelectTag, int maxClusterNum, boolean isExpansion, boolean isCluster) throws Exception, Exception {
-        List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(rawList,indexService.getDataInput().getTagIndex(),isExpansion);
+    public List<TagCluster> searchTag (List<String> rawList,int topKInSelectTag, int maxClusterNum, boolean isExpansionWithSynSet, boolean isExpansionWithCoMap, boolean isCluster, int minFreqTime, int topKForExpension) throws Exception, Exception {
+        List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(rawList,indexService.getDataInput(),isExpansionWithSynSet, isExpansionWithCoMap, minFreqTime, topKForExpension);
         List<TagCluster> list = new ArrayList<TagCluster>();
         
         if(pivotTagList.size() == 0)
@@ -290,7 +290,7 @@ public class SearchService {
      * 
      */
     public List<String> getPicUrlForTagsRandom(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
-        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput().getTagIndex(),false);
+        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
         long start = System.currentTimeMillis();
         wrapDocumentList = getWrapDocumentListForTagsRandom(tagList,currentPivot);
         long end = System.currentTimeMillis();
@@ -306,7 +306,7 @@ public class SearchService {
      * 
      */
     public List<String> getPicUrlForTagsRank(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
-        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput().getTagIndex(),false);
+        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
         long start = System.currentTimeMillis();
         wrapDocumentList = getWrapDocumentListForTagsRank(tagList,currentPivot);
         long end = System.currentTimeMillis();
@@ -772,7 +772,8 @@ public class SearchService {
         int i = 0;
         for (int n = 0; n < 1; n++) {
             List<String> list = new ArrayList<String>();
-            list.add("apple");
+            list.add("sexta");
+            list.add("bluedoor");
 //          list.add("window");
 //          list.add("baby");
 //          list.add("movie");

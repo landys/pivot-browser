@@ -39,6 +39,8 @@ import DataIndex.IndexService;
 import utils.Constants;
 import utils.Utils;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.IntArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
@@ -674,7 +676,7 @@ public class SelectTag {
 //      list.add("red");
 //      list.add("white");
         double averageTime = 0;
-        List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(list,indexService.getDataInput().getTagIndex(),true);
+        List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(list,indexService.getDataInput(),true, true, Constants.minFreqTime, Constants.topKForExpension);
         if (pivotTagList.size() == 0) {
             System.out.println("can't find word "); 
             return ;

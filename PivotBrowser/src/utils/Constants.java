@@ -57,6 +57,10 @@ public class Constants {
 	   
     static public int sampleSize = 3;
     
+    static public int minFreqTime = 20;
+    
+    static public int topKForExpension = 5;
+    
 	public enum FieldType {
 		Tag,
 		Color,

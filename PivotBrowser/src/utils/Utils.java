@@ -3,10 +3,14 @@ package utils;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.zip.DataFormatException;
 
 import model.QueryExpension;
@@ -24,6 +28,11 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
+import DataIndex.DataInput;
+
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.IntArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
 
 public class Utils {
@@ -47,8 +56,10 @@ public class Utils {
 	 * 那么自动返回空的 pivotTagList
 	 * 
 	 */
-	public static List<QueryExpension> convertRawListToPivotTagList(List<String> rawList,Map<String,Long> tagIdMap, boolean withSynWordExpension) throws Exception, IOException {
+	public static List<QueryExpension> convertRawListToPivotTagList(List<String> rawList, DataInput dataInput, boolean withSynWordExpension, boolean withCoMapExpension, int minFreq, int topKForExpension) throws Exception, IOException {
 		List<QueryExpension> pivotTagList = new ArrayList<QueryExpension>();
+		Map<String,Long> tagIdMap = dataInput.getTagIndex();
+	
 		
 		//for 同义词扩展
 		IndexSearcher searcher = null;
@@ -85,6 +96,18 @@ public class Utils {
 						synWordSet.add(tagArray[i]);
 					}
 				}				
+			} 
+			
+			
+						
+			//如果需要coMap 作为 扩展
+			//注意 这里扩展是那种  
+			if(withCoMapExpension) {
+				Set<String>  coMapExpensionSet = queryExpensionWithCoMap(dataInput, minFreq, topKForExpension,
+						queryWord); 
+				//加入 coMapExpensionSet 到同义词扩展中 
+				//暂时这个时候做 
+				synWordSet.addAll(coMapExpensionSet);
 			}
 			
 			querExpension.setSynWordSet(synWordSet);
@@ -93,7 +116,71 @@ public class Utils {
 		if(withSynWordExpension) 
 			searcher.close();
 		
+		
+		
 		return pivotTagList;
+	}
+
+	/*
+	 * 
+	 * 对单个查询词 queryWord
+	 * 进行 根据 CoMap 扩展 
+	 * 
+	 * 返回 扩展后的词 
+	 */
+	private static Set<String> queryExpensionWithCoMap(DataInput dataInput,
+			int minFreq, int topKForExpension, String queryWord) {
+		Map<String,Long> tagIdMap = dataInput.getTagIndex();
+		Map<Long,String> idIndex = dataInput.getIdIndex();
+		
+		Set<String>  coMapExpensionSet = new HashSet<String> ();
+		Long rowId = tagIdMap.get(queryWord);
+		double selfFreq = dataInput.getCoMatrixValue(rowId.intValue(), rowId.intValue());
+		
+		//如果该词是低频词,哪么需要用CoMap来扩展
+		//要扩展多少个词呢? 
+		//topKForExpension应该是一个系统参数
+		if(selfFreq < minFreq) {
+			DoubleMatrix1D row = dataInput.getCoMatrixOneRow(rowId.intValue());
+			//取得所有非0行
+			IntArrayList indexList = new IntArrayList();
+		    DoubleArrayList valueList = new DoubleArrayList();
+			row.getNonZeros(indexList, valueList);
+			int [] elements = indexList.elements();
+			double [] values = valueList.elements();
+			//创建一个倒序的比较器
+			TreeMap<Double,String> map = new TreeMap<Double,String>(new Comparator<Double> (){
+
+				public int compare(Double o1, Double o2) {
+					if(o1.doubleValue() < o2.doubleValue()) {
+						return 1;
+					} 
+					else if (o1.doubleValue() > o2.doubleValue()){
+						return -1;
+					} else 
+						return 0;
+				}});
+			
+			//插入 
+			for(int i = 0; i < elements.length; i++) {
+				String tag = idIndex.get(new Long(elements[i]));
+				Double key = new Double(values[i]);
+				map.put(key, tag);
+			}
+			
+			//枚举 出 前面 topK
+			for(Double key :map.keySet()) {
+				String tag = map.get(key);	
+				if(tag.equals(queryWord)) {
+					continue;
+				}
+				coMapExpensionSet.add(tag);
+				if(coMapExpensionSet.size() == topKForExpension)
+					break;
+			}				
+		}
+		
+		return coMapExpensionSet;
 	}
 	
 	public static BooleanQuery convertQueryListToQuery(List<QueryExpension> queryTagList) {

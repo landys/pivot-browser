@@ -550,7 +550,7 @@ public class ClusterTag {
 //          list.add("white");
             List<QueryExpension> pivotTagList = Utils
                     .convertRawListToPivotTagList(list, indexService
-                            .getDataInput().getTagIndex(), true);
+                            .getDataInput(), true, true, Constants.minFreqTime, Constants.topKForExpension);
             if (pivotTagList.size() == 0)
                 continue;
             long startTime = System.currentTimeMillis();
