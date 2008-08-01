@@ -120,6 +120,15 @@
 			[Bindable]
 			private var isCluster:Boolean = true; 
 			
+			[Bindable]
+			private var isExpansionWithCoMap:Boolean = true;
+			
+			[Bindable]
+			private var minFreqTime:int = 20;
+			
+			[Bindable]
+			private var topKForExpension:int = 5;
+			
 			// the count of processing remote call
 			private var remoteCallCount:int = 0;
 			
@@ -406,7 +415,7 @@
 					navPrevClus.visible = false;
 					navNextClus.visible = false;
 					setAllNotVisible();
-					searchRO.searchTag(tagsSearched, topKInSelectTag, maxClusterNum, isExpansion, isCluster);
+					searchRO.searchTag(tagsSearched, topKInSelectTag, maxClusterNum, isExpansion, isExpansionWithCoMap, isCluster, minFreqTime, topKForExpension);
 					disableApplication();
 				}
 			}
@@ -717,11 +726,9 @@
 				
 				assignClusPage();	
 				
-				if (cls[0].tags != null)
-				{
-					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(0)].tagList), tagsSearched, picPage);
-					disableApplication();
-				}
+				searchRO.getPicUrlForTagsRandom(getAllTagNames(), tagsSearched, picPage);
+				disableApplication();
+
 				// layout tags in center cluster
 				var temp:ArrayCollection = new ArrayCollection();
 				for (var i:int=0; i<tagsSearched.length; i++)
@@ -943,12 +950,32 @@
 				}
 			}	
 			
+			// get tags of one cluster
 			private function getTagNames(ar:ArrayCollection):ArrayCollection
 			{
 				var re:ArrayCollection = new ArrayCollection();
 				for (var i:int=0; i<ar.length; i++)
 				{
 					re.addItem(ar[i].tagName);
+				}
+				return re;
+			}
+			
+			// get all tags of all clusters
+			private function getAllTagNames():ArrayCollection
+			{
+				var re:ArrayCollection = new ArrayCollection();
+
+				if (clusters != null)
+				{
+					for (var i:int=0; i<clusters.length; ++i)
+					{
+						var ar:ArrayCollection = clusters[i].tagList;
+						for (var j:int=0; j<ar.length; ++j)
+						{
+							re.addItem(ar[j].tagName);
+						}
+					}
 				}
 				return re;
 			}
@@ -1070,15 +1097,20 @@
 				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
 					<mx:Label text="Tags:" y="2" styleName="label" x="6"/>
-					<mx:TextInput id="inputTag" width="189" x="47"/>
-					<mx:Label text="TopK:" x="249" styleName="label" y="2"/>
-					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" x="292" width="65" />
-					<mx:Label text="Cluster:" x="362" styleName="label" y="2"/>
-					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" x="416" width="60" />
-					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" x="488" width="86"  y="3"/>
-					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" x="579" width="68"  y="3"/>
-					<mx:Button label="Search" x="676" width="64" click="onSearchClick();"/>
-					<mx:Button label="Restart" x="749" width="64" click="onRestartClick();"/>
+					<mx:TextInput id="inputTag" width="121" x="47" toolTip="Input tags for search"/>
+					<mx:Label text="TopK:" x="168" styleName="label" y="2"/>
+					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" toolTip="topKInSelectTag" x="207" width="33"  y="1"/>
+					<mx:Label text="Cluster:" x="240" styleName="label" y="2"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="292" width="33" />
+					<mx:Label text="MinFreq:" x="324" styleName="label" y="1"/>
+					<mx:TextInput id="txtMinFreqTime" text="{minFreqTime}" toolTip="minFreqTime" x="383" width="34"  y="0"/>
+					<mx:Label text="TopKExp:" x="418" styleName="label" y="2"/>
+					<mx:TextInput id="txtTopKForExpension" text="{topKForExpension}" toolTip="topKForExpension" x="481" width="33" />
+					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" toolTip="isExpansion" x="521" width="86"  y="3"/>
+					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" toolTip="isCluster" x="604" width="66"  y="3"/>
+					<mx:CheckBox id="chkIsExpansionWithCoMap" selected="{isExpansionWithCoMap}" label="CoMap" toolTip="isExpansionWithCoMap" x="671" width="65"  y="3"/>
+					<mx:Button label="Search" x="736" width="50" click="onSearchClick();"/>
+					<mx:Button label="Restart" x="791" width="55" click="onRestartClick();"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
