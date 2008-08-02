@@ -29,32 +29,43 @@
 			
 			[Embed(source="assets/icon_right_disabled.png")]
 			private const ICON_RIGHT_DISABLED:Class;
-
+			
+			// the tags in current seach collection
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
 			// size of each cluster
-			private var sCluster:Object = {w:190, h:112};
+			private const CLUSTER_SIZE:Object = {w:190, h:112};
+			
+			// positioin of first cluseter
+			private const FIRST_CLUSTER:Point = new Point(26, 80);
+			
+			// gap between clusters
+			private const CLUSTER_XGAP:int = 202;
+			
+			// index of the center cluster
+			private const CENTER_CLUSTER_INDEX:int = 200;
+		
+			// index of the left cluster showing all tags.
+			private const WHOLE_CLUSTER_INDEX:int = CENTER_CLUSTER_INDEX + 1;
+			
+			// get at most number of clusters for initial search.
+			private const TAGS_PER_CLUSTERS:int = 2;
 			
 			// shape of all clusters
 			[Bindable]
 			private var sCls:ArrayCollection = new ArrayCollection(
-				[{x:26, y:80, w:sCluster.w, h:sCluster.h},
-				{x:228, y:80, w:sCluster.w, h:sCluster.h},
-				{x:430, y:80, w:sCluster.w, h:sCluster.h},
-				{x:632, y:80, w:sCluster.w, h:sCluster.h},
-				{x:834, y:80, w:sCluster.w, h:sCluster.h},
-				{x:-176, y:80, w:sCluster.w, h:sCluster.h}]);
-			
-			// x interval of two clusters.
-			private static const interval:int = 202;
+				[{x:FIRST_CLUSTER.x, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
+				{x:FIRST_CLUSTER.x+CLUSTER_XGAP, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
+				{x:FIRST_CLUSTER.x+CLUSTER_XGAP*2, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
+				{x:FIRST_CLUSTER.x+CLUSTER_XGAP*3, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h}]);
 			
 			// shape of all HRules
 			[Bindable]
 			private var sHrs:ArrayCollection = new ArrayCollection(
-				[{x:sCls[0].x+sCluster.w/2, y:sCls[0].y+5, w:200, h:2, r:-10},
-				{x:sCls[1].x+sCluster.w/2, y:sCls[1].y+5, w:100, h:2, r:-30},
-				{x:sCls[2].x+sCluster.w/2, y:sCls[2].y+5, w:100, h:2, r:-150},
-				{x:sCls[3].x+sCluster.w/2, y:sCls[3].y+5, w:200, h:2, r:-170}]);
+				[{x:sCls[0].x+CLUSTER_SIZE.w/2, y:sCls[0].y+5, w:200, h:2, r:-10},
+				{x:sCls[1].x+CLUSTER_SIZE.w/2, y:sCls[1].y+5, w:100, h:2, r:-30},
+				{x:sCls[2].x+CLUSTER_SIZE.w/2, y:sCls[2].y+5, w:100, h:2, r:-150},
+				{x:sCls[3].x+CLUSTER_SIZE.w/2, y:sCls[3].y+5, w:200, h:2, r:-170}]);
 				
 			// the size of beginning center cluster	
 			private var sClCenter:Object = {x:200, y:18, w:420, h:166}; 
@@ -69,11 +80,9 @@
 			// begin, only one cluster
 			private var isOnly:Boolean;
 			
-			// check is bigger
-			private var iBigger:int;
-			
 			// all clusters in total
-			private var clusters:ArrayCollection;
+			[Bindable]
+			private var clusters:ArrayCollection = new ArrayCollection();
 			
 			// the current move position of clusters.
 			private var curPosition:int = 0;
@@ -90,19 +99,17 @@
 			// most number of clusters on the screen
 			private var ncMost:int = 4;
 			
-			// number of clusters, including 2 hidden clusters
-			private var ncAll:int = ncMost + 2;
-			
-			// all clusters related to center tag
+			// all visible clusters related to center tag
 			// it must be assigned every change
 			private var ncReal:int;
 			
 			// page of pictures
 			private var picPage:int;
 			
-			// the cluster for search pictures
-			private var selectedClusterIndex:int;
+			// the cluster for search pictures, begin from 0, -1 means no cluster specified.
+			private var selectedClusterIndex:int = -1;
 			
+			// the pic selected for sort by color or wavelet
 			private var selectedPic:String;
 			
 			// used only in delection
@@ -129,7 +136,7 @@
 			[Bindable]
 			private var topKForExpension:int = 5;
 			
-			// the count of processing remote call
+			// the count of processing remote call, for enable or disable the application
 			private var remoteCallCount:int = 0;
 			
 			private function initApp():void
@@ -155,13 +162,14 @@
 				parMoveLeft = new Parallel();
 				parMoveRight = new Parallel();
 				
-				// create effects for each clusters and rules
-				for (var i:int=0; i<cls.length; i++)
+				var i:int = 0;
+				// create show all effects for clusters and rules
+				for (i=0; i<ncMost; i++)
 				{
 					var par:Parallel = new Parallel();
 					// cluster effect
-					var res:Resize = new Resize(cls[i]);
-					var mov:Move = new Move(cls[i]);
+					var res:Resize = new Resize();
+					var mov:Move = new Move();
 					
 					res.widthFrom = 1;
 					res.widthTo = sCls[i].w;
@@ -176,50 +184,49 @@
 					par.addChild(mov);
 					
 					// hrule effect
-					if (i < sHrs.length)
-					{
-						res = new Resize(hrs[i]);
-						mov = new Move(hrs[i]);
-						
-						res.widthFrom = 1;
-						res.widthTo = sHrs[i].w;
-						res.heightFrom = 1;
-						res.heightTo = sHrs[i].h;
-						mov.xFrom = pCenter.x;
-						mov.xTo = sHrs[i].x;
-						mov.yFrom = pCenter.y;
-						mov.yTo = sHrs[i].y;
-						
-						par.addChild(res);
-						par.addChild(mov);
-					}
+					res = new Resize(hrs[i]);
+					mov = new Move(hrs[i]);
+					
+					res.widthFrom = 1;
+					res.widthTo = sHrs[i].w;
+					res.heightFrom = 1;
+					res.heightTo = sHrs[i].h;
+					mov.xFrom = pCenter.x;
+					mov.xTo = sHrs[i].x;
+					mov.yFrom = pCenter.y;
+					mov.yTo = sHrs[i].y;
+					
+					par.addChild(res);
+					par.addChild(mov);
 					
 					// add to all effect
 					parShowAll.addChild(par);
-					
+				}
+				parShowAll.addEventListener(EffectEvent.EFFECT_START, setClustersVisible);
+				
+				// create move effects for clusters
+				for (i=0; i<=ncMost; i++) // ncMost+1 move
+				{
 					// horizontal move left
-					var movLeft:Move = new Move(cls[i]);
-					movLeft.xBy = -interval;
+					var movLeft:Move = new Move();
+					movLeft.xBy = -CLUSTER_XGAP;
 					parMoveLeft.addChild(movLeft);
 					
 					// horizontal move right
-					var movRight:Move = new Move(cls[i]);
-					movRight.xBy = interval;
+					var movRight:Move = new Move();
+					movRight.xBy = CLUSTER_XGAP;
 					parMoveRight.addChild(movRight);
 				}
-				
-				parShowAll.addEventListener(EffectEvent.EFFECT_START, setAllVisible);
 				parMoveLeft.addEventListener(EffectEvent.EFFECT_END, onMoveLeftDone);
 				parMoveRight.addEventListener(EffectEvent.EFFECT_END, onMoveRightDone);
 				
 				gameStart();
-				
-				//trace("SearchView.initApp() end");
 			}
 			
+			// intialize into beginning to search.
 			private function gameStart():void
 			{
-				setAllNotVisible();
+				setAllClustersNotVisible();
 				// init cluster center				
 				clusCenter.x = sClCenter.x;
 				clusCenter.y = sClCenter.y;
@@ -227,18 +234,25 @@
 				clusCenter.height = sClCenter.h;
 				
 				isOnly = true;
-				iBigger = -1;
 				ncReal = 0;
 				picPage = 0;
 				selectedPic = "";
 				tagsSearched.removeAll();
+				curPosition = 0;
 				setAllRadio(false);
 				navPrevClus.visible = false;
 				navNextClus.visible = false;
 				clusCenter.setStyleName("clusterCanvas");
-				cls[selectedClusterIndex].setStyleName("clusterCanvas");
+				clusters.removeAll();
 				clsWhole.setStyleName("clusterCanvasWhole");
-				selectedClusterIndex = 0;
+				selectedClusterIndex = -1;
+				
+				// reset effects
+				var i:int = 0;
+				for (i=0; i<parShowAll.children.length; i++)
+				{
+					parShowAll.children[i].target = null;
+				}
 				
 				searchRO.getTagCloud(20);
 				disableApplication();
@@ -258,23 +272,22 @@
 				}
 			}
 			
-			private function setAllNotVisible():void
+			private function setAllClustersNotVisible():void
 			{
-				//trace("SearchView.setAllNotVisible() begin");
-				for (var i:int=0; i<ncAll; i++)
+				var i:int = 0;
+				for (i=0; i<clusters.length; i++)
 				{
 					cls[i].visible = false;
-					if (i < hrs.length)
-					{
-						hrs[i].visible = false;
-					}
+				}
+				for (i=0; i<hrs.length; i++)
+				{
+					hrs[i].visible = false;
 				}
 			}
 			
-			private function setAllVisible(event:EffectEvent):void
+			private function setClustersVisible(event:EffectEvent):void
 			{
-				//trace("SearchView.setAllVisible() begin");
-				for (var i:int=0; i<ncReal&&i<ncMost; i++)
+				for (var i:int=0; i<ncReal; i++)
 				{
 					cls[i].visible = true;
 					hrs[i].visible = true;
@@ -283,43 +296,18 @@
 			
 			private function onMoveLeftDone(event:EffectEvent):void
 			{
-				var leftestIndex:int = calcLeftestIndex();
-				var rightestIndex:int = calcRightestIndex();
-				
-				cls[leftestIndex].visible = false;
-				
-				assignCluster(rightestIndex);
-				cls[rightestIndex].x = sCls[ncMost].x;
-				cls[rightestIndex].y = sCls[ncMost].y;
-				
-				if (selectedClusterIndex == leftestIndex)
+				if (curPosition - 1 >= 0)
 				{
-					doSearchClusters(calcLeftestVisibleIndex());
+					cls[curPosition - 1].visible = false;
 				}
 			}
 			
 			private function onMoveRightDone(event:EffectEvent):void
 			{
-				var leftestIndex:int = calcLeftestIndex();
-				var rightestIndex:int = calcRightestIndex();
-				
-				cls[rightestIndex].visible = false;
-
-				assignCluster(leftestIndex);
-				cls[leftestIndex].x = sCls[ncMost+1].x;
-				cls[leftestIndex].y = sCls[ncMost+1].y;
-				
-				if (selectedClusterIndex == rightestIndex)
+				if (curPosition + ncMost < clusters.length)
 				{
-					doSearchClusters(calcRightestVisibleIndex());
+					cls[curPosition + ncMost].visible = false;
 				}
-			}
-			
-			// view a tag and its relative clusters
-			public function viewTag(tag:String, index:int):void
-			{
-				var tags:Array = [tag];
-				viewTags(tags, index);
 			}
 			
 			private function setAllRadio(flag:Boolean):void
@@ -342,47 +330,38 @@
 					}
 					else
 					{
-						doViewTags();
+						doFetchClusters();
 					}
                 }
-            }
+            }    
+            
 
-			public function viewTags(tags:Array, index:int):void
-			{
-				//trace("SearchView.viewTag(tag:String="+tag+", index:int="+index+") begin");		
-				if (index == 6 && !isOnly && tags.length == 1 && tagsSearched.contains(tags[0]))
+			// update the searched tag collection, and then do fetch clusters.
+			private function fetchClusters(tags:Array, index:int):void
+			{	
+				for (var i:int=0; i<tags.length; i++)
 				{
-					// delete tags
-					tempTag = tags[0];
-					Alert.show("Delete the tag \"" + tags[0] + "\"?", "Delete Confirm", Alert.YES | Alert.NO, this, alertClickHandler);
-					return;
-				}
-				else
-				{
-					for (var i:int=0; i<tags.length; i++)
+					if (!tagsSearched.contains(tags[i]))
 					{
-						if (!tagsSearched.contains(tags[i]))
-						{
-							tagsSearched.addItem(tags[i]);
-						}
+						tagsSearched.addItem(tags[i]);
 					}
 				}	
 				
-				doViewTags();
-				
-				//trace("SearchView.viewTag(tag:String, index:int) end");
+				doFetchClusters();
+
 			}
 			
-			private function doViewTags():void
+			private function doFetchClusters():void
 			{
-				setAllNotVisible();
+				setAllClustersNotVisible();
 				
 				setAllRadio(false);
 				
 				// make center tag visible
 				//clusCenter.visible = false;
-				if (isOnly || iBigger == clusCenter.index)
+				if (isOnly)
 				{
+					// relayout the center cluster first.
 					clusCenter.width = sClC.w;
 					clusCenter.height = sClC.h;
 					clusCenter.x = sClC.x;
@@ -391,15 +370,9 @@
 					clusCenter.tags = tagsSearched;
 				}
 				
-				if (selectedClusterIndex != 0)
-				{
-					cls[selectedClusterIndex].setStyleName("clusterCanvas");
-					selectedClusterIndex = 0;
-				}
-				cls[0].setStyleName("clusterCanvasPicked");		
-				
 				if (tagsSearched.length > 0)
 				{
+					// assign arguments of searchTag interface
 					topKInSelectTag = (int)(txtTopKInSelectTag.text);
 					if (topKInSelectTag == 0)
 					{
@@ -412,9 +385,21 @@
 					}
 					isExpansion = chkIsExpansion.selected;
 					isCluster = chkIsCluster.selected;
+					isExpansionWithCoMap = chkIsExpansionWithCoMap.selected;
+					minFreqTime = (int)(txtMinFreqTime.text);
+					if (minFreqTime == 0)
+					{
+						minFreqTime = 20;
+					}
+					topKForExpension = (int)(txtTopKForExpension.text);
+					if (topKForExpension == 0)
+					{
+						topKForExpension = 5;
+					}
+					
 					navPrevClus.visible = false;
 					navNextClus.visible = false;
-					setAllNotVisible();
+					setAllClustersNotVisible();
 					searchRO.searchTag(tagsSearched, topKInSelectTag, maxClusterNum, isExpansion, isExpansionWithCoMap, isCluster, minFreqTime, topKForExpension);
 					disableApplication();
 				}
@@ -458,137 +443,9 @@
 				resize.play();
 			}
 			
-			public function showBiggerCluster(index:int):void
-			{		
-				//trace("SearchView.showBiggerCluster(index:int="+index+") begin");	
-				if (isOnly)
-				{
-					moveExClusBig.xTo = 0;
-					moveExClusBig.yTo = 0;
-					resExClusBig.widthTo = canCluster.width;
-					resExClusBig.heightTo = canCluster.height;
-					expandClusBig.target = clusCenter;
-					iBigger = index;
-					doResize(expandClusBig);
-					return;
-				}
-				
-				var ci:TagCluster = ((index>=0 && index<=5) ? cls[index] : clusCenter);
-				if (iBigger == -1 || iBigger != index)
-				{
-					var xBy:int = 0;
-					var yBy:int = 0;
-					var widthTo:int = sCluster.w * 2;
-					var heightTo:int = sCluster.h * 2;
-					switch (index)
-					{
-					case 0:
-						break;
-					case 1:
-						xBy = ci.width - widthTo;
-						break;
-					case 2:
-						yBy = ci.height - heightTo;
-						break;
-					case 3:
-						xBy = ci.width - widthTo;
-						yBy = ci.height - heightTo;
-						break;
-					case 4:
-						yBy = (ci.height - heightTo) / 2;
-						break;
-					case 5:
-						xBy = ci.width - widthTo;
-						yBy = (ci.height - heightTo) / 2;
-						break;					
-					case 6:
-						xBy = (ci.width - widthTo) / 2;
-						yBy = (ci.height - heightTo) / 2;
-						break;
-					default:
-						return;
-					}
-					
-					resExClusBig.widthTo = widthTo;
-					resExClusBig.heightTo = heightTo;
-					moveExClusBig.xTo = ci.x + xBy;
-					moveExClusBig.yTo = ci.y + yBy;
-					
-					expandClusBig.target = ci;
-					// change z-order of cls[index]
-					canCluster.removeChild(ci);
-					canCluster.addChild(ci);
-
-					if (iBigger != -1)
-					{
-						showSmallerCluster(iBigger);
-					}
-				}
-				else
-				{
-					moveExClusBig.xTo = 0;
-					moveExClusBig.yTo = 0;
-					resExClusBig.widthTo = canCluster.width;
-					resExClusBig.heightTo = canCluster.height;
-					expandClusBig.target = ci;
-				}
-				
-				iBigger = index;
-				doResize(expandClusBig);
-				//trace("SearchView.showBiggerCluster(index:int) end");
-			}
-			
-			public function showSmallerCluster(index:int=-1):void
+			private function fetchPicsByCluster(index:int=-1):void
 			{
-				//trace("SearchView.showSmallerCluster(index:int="+index+") begin");
-				
-				var ic:int = (index == -1 ? iBigger : index);
-
-				if (ic != -1)
-				{
-					if (isOnly)
-					{
-						moveConClusBig.xTo = sClCenter.x;
-						moveConClusBig.yTo = sClCenter.y;
-						resConClusBig.widthTo = sClCenter.w;
-						resConClusBig.heightTo = sClCenter.h;
-						contractClusBig.target = clusCenter;
-					}
-					else 
-					{
-						var cb:TagCluster;
-						var scb:Object;
-						if (ic >= 0 && ic <= 5)
-						{
-							cb = cls[ic];
-							scb = sCls[ic];
-						}
-						else
-						{
-							cb = clusCenter;
-							scb = sClC;
-						}
-						// contact the bigger one first
-						moveConClusBig.xTo = scb.x;
-						moveConClusBig.yTo = scb.y;
-						resConClusBig.widthTo = scb.w;
-						resConClusBig.heightTo = scb.h;
-						contractClusBig.target = cb;
-					}
-					doResize(contractClusBig);
-					if (index == -1)
-					{
-						iBigger = -1;
-					}
-				}
-				
-				doSearchClusters(index);
-				//trace("SearchView.showSmallerCluster(index:int) end");
-			}
-			
-			private function doSearchClusters(index:int=-1):void
-			{
-				if (index >=0 && index <=5)
+				if (index >=0)
 				{
 					// get pictures
 					picPage = 0;
@@ -603,9 +460,12 @@
 					
 					if (selectedClusterIndex != index)
 					{
-						cls[selectedClusterIndex].setStyleName("clusterCanvas");
-						cls[index].setStyleName("clusterCanvasPicked");
+						if (selectedClusterIndex >= 0)
+						{
+							cls[selectedClusterIndex].setStyleName("clusterCanvas");
+						}
 						selectedClusterIndex = index;
+						cls[selectedClusterIndex].setStyleName("clusterCanvasPicked");
 						clsWhole.tags = cls[selectedClusterIndex].tags;
 						clsWhole.pics = cls[selectedClusterIndex].pics;
 					}
@@ -615,19 +475,22 @@
 			// calculate the cluster data index from the cluster index.
 			private function calcDataIndex(index:int):int
 			{
-				return Math.floor((curPosition + 2 * ncAll - 2 - index) / ncAll - 1) * ncAll + index;
+				return Math.floor((curPosition + 2 * ncMost - 2 - index) / ncMost - 1) * ncMost + index;
+				//return Math.floor((curPosition + 2 * ncAll - 2 - index) / ncAll - 1) * ncAll + index;
 			}
 			
 			// calculate the index of leftest cluster
 			private function calcLeftestIndex():int
 			{
-				return (curPosition + ncAll - 1) % 6;
+				return (curPosition + ncMost - 1) % 6;
+				//return (curPosition + ncAll - 1) % 6;
 			}
 			
 			// calculate the index of rightest cluster
 			private function calcRightestIndex():int
 			{
-				return (curPosition + ncAll - 2) % 6;
+				return (curPosition + ncMost - 2) % 6;
+				//return (curPosition + ncAll - 2) % 6;
 			}
 			
 			// calculate the index of leftest visible cluster
@@ -720,11 +583,11 @@
 			
 			private function searchTagHandler(event:ResultEvent):void
 			{
-				//trace("SearchView.searchTagHandler(event:ResultEvent) begin");
 				clusters = ArrayCollection(event.result);
 				curPosition = 0;
 				
-				assignClusPage();	
+				// assign tags data to all clusters, including some global variable lick ncReal, etc.
+				assignAllClusters();	
 				
 				searchRO.getPicUrlForTagsRandom(getAllTagNames(), tagsSearched, picPage);
 				disableApplication();
@@ -738,16 +601,15 @@
 				clusCenter.tags = temp;
 				//clusCenter.visible = true;
 				
+				// center cluster effect
 				dissolveIn.end();
 				dissolveIn.play();
 				
-				// play effect
-				parShowAll.end();
-				parShowAll.play();
+				// clusters initial effects
+				layoutIntialClustersAfterFetch();
 				
 				// make not isOnly
 				isOnly = false;
-				iBigger = -1;
 				
 				navPrevClus.visible = false;
 				if (clusters.length > ncMost)
@@ -760,16 +622,22 @@
 				}
 								
 				enableApplication();
-				//trace("SearchView.searchTagHandler(event:ResultEvent) end");
+			}
+			
+			// the initalize effect after fetch clusters.
+			private function layoutIntialClustersAfterFetch():void
+			{
+				for (var i:int=0; i<ncReal; ++i)
+				{
+					parShowAll.children[i].target = cls[i];
+				}
+				parShowAll.end();
+				parShowAll.play();
 			}
 			
 			private function assignCluster(index:int):void
 			{		
-				var dataIndex:int = calcDataIndex(index);
-				if (dataIndex >= clusters.length || dataIndex < 0)
-				{
-					return;
-				}
+				var dataIndex:int = index;
 				
 				var tempb:ArrayCollection = new ArrayCollection();
 				var tempc:ArrayCollection = new ArrayCollection();
@@ -790,30 +658,25 @@
 						tempc.addItem(c[j]);
 					}
 				}
-				/*
-				if (tempc.length == 0) {
-					tempc.addItem("assets/mondorana.jpg");
-					tempc.addItem("assets/mondorana.jpg");
-					tempc.addItem("assets/mondorana.jpg");
-				}
-				*/
+
 				cls[index].tags = tempb;
 				cls[index].pics = tempc;
 			}
 			
 			// maybe something wrong
-			private function assignClusPage():void
+			private function assignAllClusters():void
 			{
 				var len:int = clusters.length - curPosition;
-				ncReal = len <= ncAll ? len : ncAll;
+				//ncReal = len <= ncAll ? len : ncAll;
+				ncReal = len <= ncMost ? len : ncMost;
 
-				for (var i:int=0; i<ncReal; i++)
+				for (var i:int=0; i<clusters.length; i++)
 				{
 					assignCluster(i);
 				}
 				
-				clsWhole.tags = cls[calcLeftestVisibleIndex()].tags;
-				clsWhole.pics = cls[calcLeftestVisibleIndex()].pics;
+				clsWhole.tags = null;
+				clsWhole.pics = null;
 			}
 			
 			private function layoutAllClusters():void
@@ -825,22 +688,13 @@
 			
 			private function showPrevClusPage():void
 			{
-				//trace("SearchView.showPrevClusPage() begin");
-				//trace("curClusPage=" + curClusPage);
-				//trace("clusters.length=" + clusters.length);
 				if (curPosition <= 0)
 				{
 					navPrevClus.visible = false;
 					return;
 				}
 				
-				//setAllNotVisible();
-
-				//assignClusPage();
-				
-				//layoutAllClusters();
-				
-				cls[calcLeftestIndex()].visible = true;
+				cls[curPosition-1].visible = true;
 
 				parMoveLeft.end();
 				parMoveRight.end();
@@ -862,22 +716,13 @@
 			
 			private function showNextClusPage():void
 			{
-				//trace("SearchView.showNextClusPage() begin");
-				//trace("curClusPage=" + curClusPage);
-				//trace("clusters.length=" + clusters.length);
 				if (clusters.length - curPosition <= ncMost)
 				{
 					navNextClus.visible = false;
 					return;
 				}
 				
-				//setAllNotVisible();
-				
-				//assignClusPage();
-				
-				//layoutAllClusters();
-				
-				cls[calcRightestIndex()].visible = true;
+				cls[curPosition+1].visible = true;
 				
 				parMoveLeft.end();
 				parMoveRight.end();
@@ -971,7 +816,7 @@
 					for (var i:int=0; i<clusters.length; ++i)
 					{
 						var ar:ArrayCollection = clusters[i].tagList;
-						for (var j:int=0; j<ar.length; ++j)
+						for (var j:int=0; j<ar.length && j<TAGS_PER_CLUSTERS; ++j)
 						{
 							re.addItem(ar[j].tagName);
 						}
@@ -992,7 +837,7 @@
 				{
 					return;
 				}
-				viewTags(ts, 6);
+				fetchClusters(ts, 6);
 				inputTag.text = "";
 			}
 			
@@ -1029,32 +874,68 @@
 				imgSelected.visible = true;
 			}
 			
+			private function onTagClick(tag:String, index:int):void
+			{
+				var tags:Array = [tag];
+				fetchClusters(tags, index);
+			}
+			
+			private function onClusterClick(index:int):void
+			{
+				fetchPicsByCluster(index);
+			}
+			
+			private function onCenterTagClick(tag:String, index:int):void
+            {
+            	if (isOnly)
+            	{
+            		var tags:Array = [tag];
+            		fetchClusters(tags, index);
+            	}
+            	else
+				{
+	            	// show alert, user global variable tempTag to pass data.
+					tempTag = tag;
+					Alert.show("Delete the tag \"" + tag + "\"?", "Delete Confirm", Alert.YES | Alert.NO, this, alertClickHandler);
+				}
+            }
+            
 			// cluster click handler
 			private function clusterClickHandler(event:ClusterClickEvent):void
 			{
 				switch (event.detailTarget)
 				{
 				case ClusterClickEvent.MORE_TARGET:
-					//showBiggerCluster(event.index);
 					// do nothing now.
 					break;
 				case ClusterClickEvent.TAG_TARGET:
-					viewTag(String(event.data), event.index);
+					onTagClick(String(event.data), event.index);
 					break;
 				case ClusterClickEvent.VACANCY_TARGET:
 				case ClusterClickEvent.PIC_TARGET:
-					doSearchClusters(event.index);
+					onClusterClick(event.index);
 					break;
 				}
 			}
 			
-			// cluster click handler
+			// center cluster click handler
+			private function centerClusterClickHandler(event:ClusterClickEvent):void
+			{
+				switch (event.detailTarget)
+				{
+				case ClusterClickEvent.TAG_TARGET:
+					onCenterTagClick(String(event.data), event.index);
+					break;
+				}
+			}
+			
+			// left(whole) cluster click handler
 			private function leftClusterClickHandler(event:ClusterClickEvent):void
 			{
 				switch (event.detailTarget)
 				{
 				case ClusterClickEvent.TAG_TARGET:
-					viewTag(String(event.data), selectedClusterIndex);
+					onTagClick(String(event.data), selectedClusterIndex);
 					break;
 				}
 			}
@@ -1132,25 +1013,28 @@
 						<mx:HRule id="hrs" rotation="{rpHrs.currentItem.r}" visible="false"/>
 					</mx:Repeater>
 					
-					<mx:Repeater id="rpCls" dataProvider="{sCls}">
+					<mx:Repeater id="rpCls" dataProvider="{clusters}">
 						<hisa:TagCluster id="cls" index="{rpCls.currentIndex}"
 							clusterClick="clusterClickHandler(event)"
 							styleName="clusterCanvas" visible="false" hasPics="true"
-							useHandCursor="true" buttonMode="true"/>
+							useHandCursor="true" buttonMode="true"
+							x="{FIRST_CLUSTER.x+rpCls.currentIndex*CLUSTER_XGAP}"
+							y="{FIRST_CLUSTER.y}" width="{CLUSTER_SIZE.w}"
+							height="{CLUSTER_SIZE.h}"/>
 					</mx:Repeater>
 						
 					<!--
 					<hisa:Tag id="tagCenter" x="293.5" y="102" text="TagCenter" visible="false"/>
 					-->
-					<hisa:TagCluster id="clusCenter" index="6"
-						clusterClick="clusterClickHandler(event)" styleName="clusterCanvasCircle" />	
+					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
+						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
 
 		<!-- image view -->
 		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
-			<hisa:TagCluster id="clsWhole" index="100"
+			<hisa:TagCluster id="clsWhole" index="{WHOLE_CLUSTER_INDEX}"
 					visible="true" hasPics="true"
 					clusterClick="leftClusterClickHandler(event)"
 					width="210" height="100%" styleName="clusterCanvasWhole" />
@@ -1182,20 +1066,7 @@
         blurYFrom="20.0" blurYTo="0.0" 
         color="0xffb000"/>
 
-            
     <mx:Dissolve id="dissolveOut" duration="500" alphaFrom="1.0" alphaTo="0.0"/>
     <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" />	
-    
-    <!-- expand one cluster	-->
-    <mx:Parallel id="expandClusBig" duration="500">
-        <mx:Move id="moveExClusBig" />
-        <mx:Resize id="resExClusBig" />
-    </mx:Parallel>
-
-	<!-- contract one cluster -->
-    <mx:Parallel id="contractClusBig" duration="300">
-        <mx:Move id="moveConClusBig"/>
-        <mx:Resize id="resConClusBig"/>
-    </mx:Parallel>
     
 </mx:Canvas>
