@@ -4,6 +4,7 @@
 	creationComplete="initApp()">
 	<mx:Script>
 		<![CDATA[
+			import hisa.vo.PhotoVo;
 			import hisa.event.ClusterClickEvent;
 			import mx.events.ItemClickEvent;
 			import mx.rpc.events.ResultEvent;
@@ -90,11 +91,11 @@
 			// effects
 			private var parShowAll:Parallel;
 			
-			// horizontal move left
-			private var parMoveLeft:Parallel;
+			// horizontal move left effect
+			private var movLeft:Move;
 			
-			// horizontal move right
-			private var parMoveRight:Parallel;
+			// horizontal move right effect
+			private var movRight:Move;
 			
 			// most number of clusters on the screen
 			private var ncMost:int = 4;
@@ -159,8 +160,6 @@
 				
 				// create effects
 				parShowAll = new Parallel();
-				parMoveLeft = new Parallel();
-				parMoveRight = new Parallel();
 				
 				var i:int = 0;
 				// create show all effects for clusters and rules
@@ -204,21 +203,16 @@
 				}
 				parShowAll.addEventListener(EffectEvent.EFFECT_START, setClustersVisible);
 				
-				// create move effects for clusters
-				for (i=0; i<=ncMost; i++) // ncMost+1 move
-				{
-					// horizontal move left
-					var movLeft:Move = new Move();
-					movLeft.xBy = -CLUSTER_XGAP;
-					parMoveLeft.addChild(movLeft);
-					
-					// horizontal move right
-					var movRight:Move = new Move();
-					movRight.xBy = CLUSTER_XGAP;
-					parMoveRight.addChild(movRight);
-				}
-				parMoveLeft.addEventListener(EffectEvent.EFFECT_END, onMoveLeftDone);
-				parMoveRight.addEventListener(EffectEvent.EFFECT_END, onMoveRightDone);
+				// horizontal move left effect 
+				movLeft = new Move();
+				movLeft.xBy = -CLUSTER_XGAP;
+				
+				// horizontal move right effect
+				movRight = new Move();
+				movRight.xBy = CLUSTER_XGAP;
+
+				movLeft.addEventListener(EffectEvent.EFFECT_END, onMoveLeftDone);
+				movRight.addEventListener(EffectEvent.EFFECT_END, onMoveRightDone);
 				
 				gameStart();
 			}
@@ -246,6 +240,9 @@
 				clusters.removeAll();
 				clsWhole.setStyleName("clusterCanvasWhole");
 				selectedClusterIndex = -1;
+				
+				// clear left(whole) cluster
+				clsWhole.clearCluster();
 				
 				// reset effects
 				var i:int = 0;
@@ -449,7 +446,7 @@
 				{
 					// get pictures
 					picPage = 0;
-					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(index)].tagList), tagsSearched, picPage);		
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[index].tagList), tagsSearched, picPage);		
 					disableApplication();
 					rbtnColor.enabled = false;
 					rbtnWavelet.enabled = false;
@@ -470,39 +467,6 @@
 						clsWhole.pics = cls[selectedClusterIndex].pics;
 					}
 				}
-			}
-			
-			// calculate the cluster data index from the cluster index.
-			private function calcDataIndex(index:int):int
-			{
-				return Math.floor((curPosition + 2 * ncMost - 2 - index) / ncMost - 1) * ncMost + index;
-				//return Math.floor((curPosition + 2 * ncAll - 2 - index) / ncAll - 1) * ncAll + index;
-			}
-			
-			// calculate the index of leftest cluster
-			private function calcLeftestIndex():int
-			{
-				return (curPosition + ncMost - 1) % 6;
-				//return (curPosition + ncAll - 1) % 6;
-			}
-			
-			// calculate the index of rightest cluster
-			private function calcRightestIndex():int
-			{
-				return (curPosition + ncMost - 2) % 6;
-				//return (curPosition + ncAll - 2) % 6;
-			}
-			
-			// calculate the index of leftest visible cluster
-			private function calcLeftestVisibleIndex():int
-			{
-				return curPosition % 6;
-			}
-			
-			// calculate the index of rightest visible cluster
-			private function calcRightestVisibleIndex():int
-			{
-				return (curPosition + ncMost - 1) % 6;
 			}
 			
 			private function faultHandler(event:FaultEvent):void
@@ -536,7 +500,7 @@
 				
 				for (i=0; i<a.length; i++)
 				{	
-					photos.addItem({source: a.getItemAt(i), toolTip: toolTip});
+					photos.addItem(new PhotoVo(String(a.getItemAt(i)), toolTip));
 				}
 				
 				imgView.photos = photos;
@@ -588,6 +552,9 @@
 				
 				// assign tags data to all clusters, including some global variable lick ncReal, etc.
 				assignAllClusters();	
+				
+				movLeft.targets = cls;
+				movRight.targets = cls;
 				
 				searchRO.getPicUrlForTagsRandom(getAllTagNames(), tagsSearched, picPage);
 				disableApplication();
@@ -675,8 +642,7 @@
 					assignCluster(i);
 				}
 				
-				clsWhole.tags = null;
-				clsWhole.pics = null;
+				clsWhole.clearCluster();
 			}
 			
 			private function layoutAllClusters():void
@@ -696,12 +662,12 @@
 				
 				cls[curPosition-1].visible = true;
 
-				parMoveLeft.end();
-				parMoveRight.end();
+				movLeft.end();
+				movRight.end();
 				
 				curPosition--;
-				
-				parMoveRight.play();
+				//movRight.targets = cls;
+				movRight.play();
 				
 				if (!navNextClus.visible)
 				{
@@ -722,14 +688,14 @@
 					return;
 				}
 				
-				cls[curPosition+1].visible = true;
-				
-				parMoveLeft.end();
-				parMoveRight.end();
+				cls[curPosition+ncMost].visible = true;
+
+				movLeft.end();
+				movRight.end();
 				
 				curPosition++;
-				
-				parMoveLeft.play();
+				//movLeft.targets = cls;
+				movLeft.play();
 				
 				if (clusters.length - curPosition <= ncMost)
 				{
@@ -760,12 +726,12 @@
 					}
 					else if (rbtnRandom.visible && rbtnRandom.selected)
 					{
-						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, --picPage);
+						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, --picPage);
 						disableApplication();
 					}
 					else
 					{
-						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, --picPage);
+						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, --picPage);
 						disableApplication();
 					}
 				}
@@ -785,12 +751,12 @@
 				}
 				else if (rbtnRandom.visible && rbtnRandom.selected)
 				{
-					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, ++picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, ++picPage);
 					disableApplication();
 				}
 				else
 				{
-					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, ++picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, ++picPage);
 					disableApplication();
 				}
 			}	
@@ -867,7 +833,7 @@
 				else
 				{
 					imgSelected.blendMode=BlendMode.OVERLAY;
-					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[calcDataIndex(selectedClusterIndex)].tagList), tagsSearched, picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, picPage);
 					disableApplication();
 				}
 				imgSelected.visible = false;
@@ -1067,6 +1033,6 @@
         color="0xffb000"/>
 
     <mx:Dissolve id="dissolveOut" duration="500" alphaFrom="1.0" alphaTo="0.0"/>
-    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" />	
+    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" />
     
 </mx:Canvas>
