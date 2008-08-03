@@ -53,20 +53,18 @@
 			private const TAGS_PER_CLUSTERS:int = 2;
 			
 			// shape of all clusters
-			[Bindable]
-			private var sCls:ArrayCollection = new ArrayCollection(
+			private const VISIBLE_CLUSTERS_SHAPE:ArrayCollection = new ArrayCollection(
 				[{x:FIRST_CLUSTER.x, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
 				{x:FIRST_CLUSTER.x+CLUSTER_XGAP, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
 				{x:FIRST_CLUSTER.x+CLUSTER_XGAP*2, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
 				{x:FIRST_CLUSTER.x+CLUSTER_XGAP*3, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h}]);
 			
 			// shape of all HRules
-			[Bindable]
-			private var sHrs:ArrayCollection = new ArrayCollection(
-				[{x:sCls[0].x+CLUSTER_SIZE.w/2, y:sCls[0].y+5, w:200, h:2, r:-10},
-				{x:sCls[1].x+CLUSTER_SIZE.w/2, y:sCls[1].y+5, w:100, h:2, r:-30},
-				{x:sCls[2].x+CLUSTER_SIZE.w/2, y:sCls[2].y+5, w:100, h:2, r:-150},
-				{x:sCls[3].x+CLUSTER_SIZE.w/2, y:sCls[3].y+5, w:200, h:2, r:-170}]);
+			private const HRS_SHAPE:ArrayCollection = new ArrayCollection(
+				[{x:VISIBLE_CLUSTERS_SHAPE[0].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[0].y+5, w:200, h:2, r:-10},
+				{x:VISIBLE_CLUSTERS_SHAPE[1].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[1].y+5, w:100, h:2, r:-30},
+				{x:VISIBLE_CLUSTERS_SHAPE[2].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[2].y+5, w:100, h:2, r:-150},
+				{x:VISIBLE_CLUSTERS_SHAPE[3].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[3].y+5, w:200, h:2, r:-170}]);
 				
 			// the size of beginning center cluster	
 			private var sClCenter:Object = {x:200, y:18, w:420, h:166}; 
@@ -171,13 +169,13 @@
 					var mov:Move = new Move();
 					
 					res.widthFrom = 1;
-					res.widthTo = sCls[i].w;
+					res.widthTo = VISIBLE_CLUSTERS_SHAPE[i].w;
 					res.heightFrom = 1;
-					res.heightTo = sCls[i].h;
+					res.heightTo = VISIBLE_CLUSTERS_SHAPE[i].h;
 					mov.xFrom = pCenter.x;
-					mov.xTo = sCls[i].x;
+					mov.xTo = VISIBLE_CLUSTERS_SHAPE[i].x;
 					mov.yFrom = pCenter.y;
-					mov.yTo = sCls[i].y;
+					mov.yTo = VISIBLE_CLUSTERS_SHAPE[i].y;
 					
 					par.addChild(res);
 					par.addChild(mov);
@@ -187,13 +185,13 @@
 					mov = new Move(hrs[i]);
 					
 					res.widthFrom = 1;
-					res.widthTo = sHrs[i].w;
+					res.widthTo = HRS_SHAPE[i].w;
 					res.heightFrom = 1;
-					res.heightTo = sHrs[i].h;
+					res.heightTo = HRS_SHAPE[i].h;
 					mov.xFrom = pCenter.x;
-					mov.xTo = sHrs[i].x;
+					mov.xTo = HRS_SHAPE[i].x;
 					mov.yFrom = pCenter.y;
-					mov.yTo = sHrs[i].y;
+					mov.yTo = HRS_SHAPE[i].y;
 					
 					par.addChild(res);
 					par.addChild(mov);
@@ -975,7 +973,7 @@
 						x="823" y="125"
 					    click="showNextClusPage()" />
 					<!--clipContent="false"-->
-					<mx:Repeater id="rpHrs" dataProvider="{sHrs}">
+					<mx:Repeater id="rpHrs" dataProvider="{HRS_SHAPE}">
 						<mx:HRule id="hrs" rotation="{rpHrs.currentItem.r}" visible="false"/>
 					</mx:Repeater>
 					
