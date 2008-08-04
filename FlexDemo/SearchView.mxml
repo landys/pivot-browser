@@ -204,11 +204,13 @@
 				// horizontal move left effect 
 				movLeft = new Move();
 				movLeft.xBy = -CLUSTER_XGAP;
+				movLeft.duration = 300;
 				
 				// horizontal move right effect
 				movRight = new Move();
 				movRight.xBy = CLUSTER_XGAP;
-
+				movRight.duration = 300;
+				
 				movLeft.addEventListener(EffectEvent.EFFECT_END, onMoveLeftDone);
 				movRight.addEventListener(EffectEvent.EFFECT_END, onMoveRightDone);
 				
