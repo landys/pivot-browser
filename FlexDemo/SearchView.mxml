@@ -135,6 +135,9 @@
 			[Bindable]
 			private var topKForExpension:int = 5;
 			
+			[Bindable]
+			private var picNum:int = 0;
+			
 			// the count of processing remote call, for enable or disable the application
 			private var remoteCallCount:int = 0;
 			
@@ -155,6 +158,8 @@
 				searchRO.getTagCloud.addEventListener("fault", faultHandler);
 				searchRO.searchTag.addEventListener("result", searchTagHandler);
 				searchRO.searchTag.addEventListener("fault", faultHandler);
+				searchRO.getPivotNumPic.addEventListener("result", getPivotNumPicHandler);
+				searchRO.getPivotNumPic.addEventListener("fault", faultHandler);
 				
 				// create effects
 				parShowAll = new Parallel();
@@ -547,6 +552,8 @@
 			
 			private function searchTagHandler(event:ResultEvent):void
 			{
+				searchRO.getPivotNumPic();
+				
 				clusters = ArrayCollection(event.result);
 				curPosition = 0;
 				
@@ -905,6 +912,11 @@
 					break;
 				}
 			}
+			
+			private function getPivotNumPicHandler(event:ResultEvent):void
+			{
+				picNum = int(event.result);
+			}
 		]]>
 	</mx:Script>
 	
@@ -994,6 +1006,8 @@
 					-->
 					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
+						
+					<mx:Label id="lblPicNum" text="图片总数: {picNum}" x="10" y="10" width="146" fontSize="12" color="#000080"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
