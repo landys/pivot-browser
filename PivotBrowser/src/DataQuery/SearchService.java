@@ -67,10 +67,23 @@ public class SearchService {
     //路径
     static private String pathUrl = "../data/"; 
     
+    //含有当前的pivot的图片的总数
+    //只有 重新调用 serachTag 才改变 
+    private int pivotNumPic; 
     
     
     
-    public static IndexService getIndexService() {
+    public int getPivotNumPic() {
+		return pivotNumPic;
+	}
+
+
+	public void setPivotNumPic(int pivotNumPic) {
+		this.pivotNumPic = pivotNumPic;
+	}
+
+
+	public static IndexService getIndexService() {
         return indexService;
     }
 
@@ -181,6 +194,7 @@ public class SearchService {
                 String picPath = field.stringValue(); 
                 picStringList.add(pathUrl + picPath);
             }
+            searcher.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -201,9 +215,19 @@ public class SearchService {
         List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(rawList,indexService.getDataInput(),isExpansionWithSynSet, isExpansionWithCoMap, minFreqTime, topKForExpension);
         List<TagCluster> list = new ArrayList<TagCluster>();
         
-        if(pivotTagList.size() == 0)
+        if(pivotTagList.size() == 0) {
+        	//for record 含有 pivot的 pic数目  
+        	pivotNumPic = 0;
             return list;
-        
+        }        
+      
+        //计算 含有 pivot的 pic数目
+        BooleanQuery query = Utils.convertQueryListToQuery(pivotTagList);        
+        IndexSearcher searcher = new IndexSearcher(Constants.lucencePath);
+        Hits hits = searcher.search(query);
+        pivotNumPic = hits.length();
+        searcher.close();
+       
         select = new SelectTag(topKInSelectTag,pivotTagList,indexService.getDataInput());
         
         if (isCluster) {
