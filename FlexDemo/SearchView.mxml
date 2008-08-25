@@ -1007,7 +1007,7 @@
 					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 						
-					<mx:Label id="lblPicNum" text="图片总数: {picNum}" x="10" y="10" width="146" fontSize="12" color="#000080"/>
+					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="10" y="10" width="146" fontSize="12" color="#000080"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
