@@ -31,6 +31,12 @@
 			[Embed(source="assets/icon_right_disabled.png")]
 			private const ICON_RIGHT_DISABLED:Class;
 			
+			[Embed(source="assets/undo.png")]
+			private const ICON_UNDO:Class;
+			
+			[Embed(source="assets/redo.png")]		
+			private const ICON_REDO:Class;
+			
 			// the tags in current seach collection
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
@@ -965,11 +971,11 @@
 					<mx:TextInput id="txtMinFreqTime" text="{minFreqTime}" toolTip="minFreqTime" x="383" width="34"  y="0"/>
 					<mx:Label text="TopKExp:" x="418" styleName="label" y="2"/>
 					<mx:TextInput id="txtTopKForExpension" text="{topKForExpension}" toolTip="topKForExpension" x="481" width="33" />
-					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" toolTip="isExpansion" x="521" width="86"  y="3"/>
-					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" toolTip="isCluster" x="604" width="66"  y="3"/>
-					<mx:CheckBox id="chkIsExpansionWithCoMap" selected="{isExpansionWithCoMap}" label="CoMap" toolTip="isExpansionWithCoMap" x="671" width="65"  y="3"/>
-					<mx:Button label="Search" x="736" width="50" click="onSearchClick();"/>
-					<mx:Button label="Restart" x="791" width="55" click="onRestartClick();"/>
+					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" toolTip="isExpansion" x="521" width="86" y="3" buttonMode="true" useHandCursor="true"/>
+					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" toolTip="isCluster" x="604" width="66" y="3" buttonMode="true" useHandCursor="true"/>
+					<mx:CheckBox id="chkIsExpansionWithCoMap" selected="{isExpansionWithCoMap}" label="CoMap" toolTip="isExpansionWithCoMap" x="671" width="65" y="3" buttonMode="true" useHandCursor="true"/>
+					<mx:Button label="Search" x="736" width="50" click="onSearchClick();" buttonMode="true" useHandCursor="true"/>
+					<mx:Button label="Restart" x="791" width="55" click="onRestartClick();" buttonMode="true" useHandCursor="true"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -1007,7 +1013,9 @@
 					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 						
-					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="10" y="10" width="146" fontSize="12" color="#000080"/>
+					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" fontSize="12" color="#000080"/>
+					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="20" height="22" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true"/>
+					<mx:Button icon="{ICON_REDO}" x="61" y="10" width="22" height="22"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
