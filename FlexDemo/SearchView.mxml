@@ -930,9 +930,9 @@
 				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
 					<mx:Label text="Input Tags:" y="1" styleName="label" x="5" width="99"/>
-					<mx:TextInput id="inputTag" width="534" x="90" toolTip="Input tags for search"/>
-					<mx:Button label="Search" x="650" width="66" click="onSearchClick();"/>
-					<mx:Button label="Restart" x="732" width="67" click="onRestartClick();"/>
+					<mx:TextInput id="inputTag" width="375" x="98" toolTip="Input tags for search"/>
+					<mx:Button label="Search" x="512" width="66" click="onSearchClick();"/>
+					<mx:Button label="Restart" x="604" width="67" click="onRestartClick();"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
