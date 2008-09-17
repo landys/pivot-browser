@@ -389,7 +389,7 @@
 					maxClusterNum = (int)(txtMaxClusterNum.text);
 					if (maxClusterNum == 0)
 					{
-						maxClusterNum = 100;
+						maxClusterNum = 20;
 					}
 					isExpansion = chkIsExpansion.selected;
 					isCluster = chkIsCluster.selected;
