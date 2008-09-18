@@ -147,6 +147,9 @@
 			// the count of processing remote call, for enable or disable the application
 			private var remoteCallCount:int = 0;
 			
+			// the number of pictures displayed in the screen.
+			private var maxPicsPerDisplay:int = 40;
+			
 			private function initApp():void
 			{
 				//Security.loadPolicyFile("http://192.168.80.158:8080/PivotBrowser/crossdomain.xml");
@@ -380,7 +383,11 @@
 				
 				if (tagsSearched.length > 0)
 				{
-					
+					maxClusterNum = (int)(txtMaxClusterNum.text);
+					if (maxClusterNum == 0)
+					{
+						maxClusterNum = 20;
+					}
 					navPrevClus.visible = false;
 					navNextClus.visible = false;
 					setAllClustersNotVisible();
@@ -485,7 +492,7 @@
 					}
 				}
 				
-				for (i=0; i<a.length; i++)
+				for (i=0; i<a.length && i<maxPicsPerDisplay; i++)
 				{	
 					photos.addItem(new PhotoVo(String(a.getItemAt(i)), toolTip));
 				}
@@ -936,9 +943,11 @@
 				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
 					<mx:Label text="Input Tags:" y="1" styleName="label" x="5" width="99"/>
-					<mx:TextInput id="inputTag" width="375" x="98" toolTip="Input tags for search"/>
-					<mx:Button label="Search" x="512" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true"/>
-					<mx:Button label="Restart" x="604" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true"/>
+					<mx:TextInput id="inputTag" width="297" x="98" toolTip="Input tags for search"/>
+					<mx:Label text="Max Clusters:" x="408" styleName="label" y="1"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="508" width="52" />
+					<mx:Button label="Search" x="585" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true"/>
+					<mx:Button label="Restart" x="677" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -977,8 +986,8 @@
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 						
 					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" fontSize="12" color="#000080"/>
-					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="20" height="22" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true"/>
-					<mx:Button icon="{ICON_REDO}" x="61" y="10" width="22" height="22"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
+					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="49" height="49" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true"/>
+					<mx:Button icon="{ICON_REDO}" x="95" y="10" width="49" height="49"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
