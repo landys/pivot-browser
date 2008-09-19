@@ -50,7 +50,7 @@
 				var imgs:Array = [img1, img2, img3];
 				if (hasPics && pics != null && pics.length > 0)
 				{
-					hboxPics.height = cw / 3;
+					hboxPics.height = cw / 3 - 5;
 					for (i=0; i<3 && i<pics.length; ++i)
 					{
 						imgs[i].width = cw / 3 - 5;
