@@ -2,7 +2,7 @@ package utils;
 
 public class Constants {
 	
-	static public String lucencePath = "G:/workspace/PivotBroswer/lucence/";
+	static public String lucencePath = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/lucence/";
 	
 	static public String lucenceTagFieldName = "tags";
 	
@@ -19,11 +19,11 @@ public class Constants {
 	
 	static public String lucencePicFilePathFieldName = "picfilepaths";
 	
-	static public String rawDataPath = "G:/apache-tomcat-5.5.17/webapps/PivotBrowser/data";
+	static public String rawDataPath = "F:/apache-tomcat-6.0.16/webapps/PivotBrowser/data";
 	
 	static public String image = "data";
 	
-	static public String synsetIndexDir = "G:/workspace/PivotBroswer/synsetindex";
+	static public String synsetIndexDir = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/synsetindex";
 	
 	static public String mergeIndexDir = "./mergedir/";
 	
@@ -38,7 +38,7 @@ public class Constants {
 	
 	static public int numPerPage = 100;
 	
-	static public String dataInputName = "G:/workspace/PivotBroswer/dataInputObject";	
+	static public String dataInputName = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/dataInputObject";	
 	
 	static public int topK = 100;
 	
@@ -54,7 +54,13 @@ public class Constants {
 	static public String unsortTagTimesFileName = "./unsorttaglist.txt";
 	
 	static public int distributedLoadNum = 12;
-	
+	   
+    static public int sampleSize = 3;
+    
+    static public int minFreqTime = 20;
+    
+    static public int topKForExpension = 5;
+    
 	public enum FieldType {
 		Tag,
 		Color,

@@ -118,16 +118,17 @@
     
 <!--	<mx:Label id="position" width="100" height="20"/>-->
 	
-	<mx:Canvas id="imageBox" width="100%" height="100%" borderStyle="solid">
+	<mx:Canvas id="imageBox" width="80%" height="80%" borderStyle="solid">
     	<mx:Image id="imgPhoto" source="{data.source}" width="100%" height="100%" 
     		toolTip="{data.toolTip}"
     	    horizontalAlign="center" verticalAlign="middle" 
     	    rollOverEffect="{glowImage}" 
             rollOutEffect="{unglowImage}"
             mouseMove="dragMe(event, imgPhoto, 'img');"
-            click="photoClick(event);"
             updateComplete="imgUrl=data.source;"/>
-            <!--mouseDown="data.hindBigPhoto(event)"/>-->
+            <!--click="photoClick(event);"
+            updateComplete="imgUrl=data.source;"/>
+            mouseDown="data.hindBigPhoto(event)"/>-->
 	</mx:Canvas>
 	
     <mx:states>

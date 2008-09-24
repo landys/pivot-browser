@@ -208,6 +208,8 @@ public class IndexService implements Serializable{
 		
 		IndexService indexService = new IndexService();
 		
+		System.out.println(indexService.getDataInput().getTotalTagNum());
+		
 		System.out.println("e");
 		//MergeDataInput();
 		

@@ -4,6 +4,8 @@
 	creationComplete="initApp()">
 	<mx:Script>
 		<![CDATA[
+			import hisa.vo.PhotoVo;
+			import hisa.event.ClusterClickEvent;
 			import mx.events.ItemClickEvent;
 			import mx.rpc.events.ResultEvent;
 			import mx.collections.ArrayCollection;
@@ -29,75 +31,90 @@
 			[Embed(source="assets/icon_right_disabled.png")]
 			private const ICON_RIGHT_DISABLED:Class;
 			
-			[Bindable]
-			private var photoArray:ArrayCollection = new ArrayCollection();
+			[Embed(source="assets/undo.png")]
+			private const ICON_UNDO:Class;
 			
-			//private var tagsArray:ArrayCollection = new ArrayCollection();
-
-			//private var tagsCenter:ArrayCollection = new ArrayCollection();
+			[Embed(source="assets/redo.png")]		
+			private const ICON_REDO:Class;
 			
+			// the tags in current seach collection
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
 			// size of each cluster
-			private var sCluster:Object = {w:180, h:70};
+			private const CLUSTER_SIZE:Object = {w:190, h:112};
+			
+			// positioin of first cluseter
+			private const FIRST_CLUSTER:Point = new Point(26, 80);
+			
+			// gap between clusters
+			private const CLUSTER_XGAP:int = 202;
+			
+			// index of the center cluster
+			private const CENTER_CLUSTER_INDEX:int = 200;
+		
+			// index of the left cluster showing all tags.
+			private const WHOLE_CLUSTER_INDEX:int = CENTER_CLUSTER_INDEX + 1;
+			
+			// get at most number of clusters for initial search.
+			private const TAGS_PER_CLUSTERS:int = 2;
 			
 			// shape of all clusters
-			[Bindable]
-			private var sCls:ArrayCollection = new ArrayCollection(
-				[{x:76, y:0, w:sCluster.w, h:sCluster.h},//0
-				{x:394, y:0, w:sCluster.w, h:sCluster.h},//3
-				{x:76, y:156, w:sCluster.w, h:sCluster.h},//2
-				{x:394, y:156, w:sCluster.w, h:sCluster.h},//5
-				{x:26, y:77, w:sCluster.w, h:sCluster.h},//1
-				{x:441, y:77, w:sCluster.w, h:sCluster.h}]);//4				
+			private const VISIBLE_CLUSTERS_SHAPE:ArrayCollection = new ArrayCollection(
+				[{x:FIRST_CLUSTER.x, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
+				{x:FIRST_CLUSTER.x+CLUSTER_XGAP, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
+				{x:FIRST_CLUSTER.x+CLUSTER_XGAP*2, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h},
+				{x:FIRST_CLUSTER.x+CLUSTER_XGAP*3, y:FIRST_CLUSTER.y, w:CLUSTER_SIZE.w, h:CLUSTER_SIZE.h}]);
 			
 			// shape of all HRules
-			[Bindable]
-			private var sHrs:ArrayCollection = new ArrayCollection(
-				[{x:237, y:60, w:100, h:2, r:30},//0
-				{x:324, y:111, w:100, h:2, r:-30},//3
-				{x:238, y:161, w:100, h:2, r:-30},//2
-				{x:321, y:110, w:100, h:2, r:30},//5
-				{x:182, y:111, w:142, h:2, r:0},//1
-				{x:322, y:111, w:142, h:2, r:0}]);//4
+			private const HRS_SHAPE:ArrayCollection = new ArrayCollection(
+				[{x:VISIBLE_CLUSTERS_SHAPE[0].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[0].y+5, w:200, h:2, r:-10},
+				{x:VISIBLE_CLUSTERS_SHAPE[1].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[1].y+5, w:100, h:2, r:-30},
+				{x:VISIBLE_CLUSTERS_SHAPE[2].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[2].y+5, w:100, h:2, r:-150},
+				{x:VISIBLE_CLUSTERS_SHAPE[3].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[3].y+5, w:200, h:2, r:-170}]);
 				
 			// the size of beginning center cluster	
-			private var sClCenter:Object = {x:113, y:18, w:360, h:180}; 
+			private var sClCenter:Object = {x:200, y:18, w:420, h:166}; 
 			
 			// the size of center cluster
 			//private var sClC:Object = {x:258, y:74, w:140, h:70}; 
-			private var sClC:Object = {x:258, y:59, w:140, h:100}; 
+			private var sClC:Object = {x:sClCenter.x, y:5, w:sClCenter.w, h:53}; 
 			
-			// place of center of clusters
-			private var pCenter:Object = {x:295, y:102};
+			// place of center of clusters, one endpoint of the Hrs.
+			private var pCenter:Object = {x:sClC.x+sClC.w/2, y:sClC.y+sClC.h/2};
 			
 			// begin, only one cluster
 			private var isOnly:Boolean;
 			
-			// check is bigger
-			private var iBigger:int;
-			
 			// all clusters in total
-			private var clusters:ArrayCollection;
-			// current cluster page
-			private var curClusPage:int = 0;
+			[Bindable]
+			private var clusters:ArrayCollection = new ArrayCollection();
+			
+			// the current move position of clusters.
+			private var curPosition:int = 0;
 			
 			// effects
 			private var parShowAll:Parallel;
 			
-			// most number of clusters on the screen
-			private var ncMost:int = 6;
+			// horizontal move left effect
+			private var movLeft:Move;
 			
-			// all clusters related to center tag
+			// horizontal move right effect
+			private var movRight:Move;
+			
+			// most number of clusters on the screen
+			private var ncMost:int = 4;
+			
+			// all visible clusters related to center tag
 			// it must be assigned every change
 			private var ncReal:int;
 			
 			// page of pictures
 			private var picPage:int;
 			
-			// the cluster for search pictures
-			private var selectedClusterIndex:int;
+			// the cluster for search pictures, begin from 0, -1 means no cluster specified.
+			private var selectedClusterIndex:int = -1;
 			
+			// the pic selected for sort by color or wavelet
 			private var selectedPic:String;
 			
 			// used only in delection
@@ -114,6 +131,24 @@
 			
 			[Bindable]
 			private var isCluster:Boolean = true; 
+			
+			[Bindable]
+			private var isExpansionWithCoMap:Boolean = true;
+			
+			[Bindable]
+			private var minFreqTime:int = 20;
+			
+			[Bindable]
+			private var topKForExpension:int = 5;
+			
+			[Bindable]
+			private var picNum:int = 0;
+			
+			// the count of processing remote call, for enable or disable the application
+			private var remoteCallCount:int = 0;
+			
+			// the number of pictures displayed in the screen.
+			private var maxPicsPerDisplay:int = 40;
 			
 			private function initApp():void
 			{
@@ -132,60 +167,74 @@
 				searchRO.getTagCloud.addEventListener("fault", faultHandler);
 				searchRO.searchTag.addEventListener("result", searchTagHandler);
 				searchRO.searchTag.addEventListener("fault", faultHandler);
+				searchRO.getPivotNumPic.addEventListener("result", getPivotNumPicHandler);
+				searchRO.getPivotNumPic.addEventListener("fault", faultHandler);
 				
 				// create effects
 				parShowAll = new Parallel();
 				
-				// create effects for each clusters and rules
-				for (var i:int=0; i<cls.length; i++)
+				var i:int = 0;
+				// create show all effects for clusters and rules
+				for (i=0; i<ncMost; i++)
 				{
 					var par:Parallel = new Parallel();
 					// cluster effect
-					var res:Resize = new Resize(cls[i]);
-					var mov:Move = new Move(cls[i]);
+					var res:Resize = new Resize();
+					var mov:Move = new Move();
 					
 					res.widthFrom = 1;
-					res.widthTo = sCls[i].w;
+					res.widthTo = VISIBLE_CLUSTERS_SHAPE[i].w;
 					res.heightFrom = 1;
-					res.heightTo = sCls[i].h;
+					res.heightTo = VISIBLE_CLUSTERS_SHAPE[i].h;
 					mov.xFrom = pCenter.x;
-					mov.xTo = sCls[i].x;
+					mov.xTo = VISIBLE_CLUSTERS_SHAPE[i].x;
 					mov.yFrom = pCenter.y;
-					mov.yTo = sCls[i].y;
+					mov.yTo = VISIBLE_CLUSTERS_SHAPE[i].y;
 					
 					par.addChild(res);
 					par.addChild(mov);
+					
 					// hrule effect
 					res = new Resize(hrs[i]);
 					mov = new Move(hrs[i]);
 					
 					res.widthFrom = 1;
-					res.widthTo = sHrs[i].w;
+					res.widthTo = HRS_SHAPE[i].w;
 					res.heightFrom = 1;
-					res.heightTo = sHrs[i].h;
+					res.heightTo = HRS_SHAPE[i].h;
 					mov.xFrom = pCenter.x;
-					mov.xTo = sHrs[i].x;
+					mov.xTo = HRS_SHAPE[i].x;
 					mov.yFrom = pCenter.y;
-					mov.yTo = sHrs[i].y;
+					mov.yTo = HRS_SHAPE[i].y;
 					
 					par.addChild(res);
 					par.addChild(mov);
 					
-					par.addEventListener(EffectEvent.EFFECT_END, showClusterTags);
 					// add to all effect
 					parShowAll.addChild(par);
 				}
+				parShowAll.addEventListener(EffectEvent.EFFECT_START, setClustersVisible);
 				
-				parShowAll.addEventListener(EffectEvent.EFFECT_START, setAllVisible);
+				// horizontal move left effect 
+				movLeft = new Move();
+				movLeft.xBy = -CLUSTER_XGAP;
+				movLeft.duration = 300;
+				
+				// horizontal move right effect
+				movRight = new Move();
+				movRight.xBy = CLUSTER_XGAP;
+				movRight.duration = 300;
+				
+				movLeft.addEventListener(EffectEvent.EFFECT_END, onMoveLeftDone);
+				movRight.addEventListener(EffectEvent.EFFECT_END, onMoveRightDone);
 				
 				gameStart();
-				
-				//trace("SearchView.initApp() end");
 			}
 			
+			// intialize into beginning to search.
 			private function gameStart():void
 			{
-				setAllNotVisible();
+				setAllClustersNotVisible();
 				// init cluster center				
 				clusCenter.x = sClCenter.x;
 				clusCenter.y = sClCenter.y;
@@ -193,34 +242,62 @@
 				clusCenter.height = sClCenter.h;
 				
 				isOnly = true;
-				iBigger = -1;
 				ncReal = 0;
 				picPage = 0;
 				selectedPic = "";
 				tagsSearched.removeAll();
+				curPosition = 0;
 				setAllRadio(false);
 				navPrevClus.visible = false;
 				navNextClus.visible = false;
 				clusCenter.setStyleName("clusterCanvas");
-				cls[selectedClusterIndex].setStyleName("clusterCanvas");
-				selectedClusterIndex = 0;
+				clusters.removeAll();
+				clsWhole.setStyleName("clusterCanvasWhole");
+				selectedClusterIndex = -1;
+				
+				// clear left(whole) cluster
+				clsWhole.clearCluster();
+				
+				// reset effects
+				var i:int = 0;
+				for (i=0; i<parShowAll.children.length; i++)
+				{
+					parShowAll.children[i].target = null;
+				}
 				
 				searchRO.getTagCloud(20);
+				disableApplication();
 			}
 			
-			private function setAllNotVisible():void
+			private function disableApplication():void
 			{
-				//trace("SearchView.setAllNotVisible() begin");
-				for (var i:int=0; i<ncMost; i++)
+				++remoteCallCount;
+				Application.application.enabled = false;
+			}
+			
+			private function enableApplication():void
+			{
+				if (--remoteCallCount <= 0)
+				{
+					Application.application.enabled = true;
+				}
+			}
+			
+			private function setAllClustersNotVisible():void
+			{
+				var i:int = 0;
+				for (i=0; i<clusters.length; i++)
 				{
 					cls[i].visible = false;
+				}
+				for (i=0; i<hrs.length; i++)
+				{
 					hrs[i].visible = false;
 				}
 			}
 			
-			private function setAllVisible(event:EffectEvent):void
+			private function setClustersVisible(event:EffectEvent):void
 			{
-				//trace("SearchView.setAllVisible() begin");
 				for (var i:int=0; i<ncReal; i++)
 				{
 					cls[i].visible = true;
@@ -228,18 +305,20 @@
 				}
 			}
 			
-			// show all tags in cluster
-			private function showClusterTags(event:EffectEvent):void
+			private function onMoveLeftDone(event:EffectEvent):void
 			{
-				//trace("SearchView.showClusterTags(event:EffectEvent) begin");
-				event.currentTarget.children[0].target.initTagCluster();
+				if (curPosition - 1 >= 0)
+				{
+					cls[curPosition - 1].visible = false;
+				}
 			}
 			
-			// view a tag and its relative clusters
-			public function viewTag(tag:String, index:int):void
+			private function onMoveRightDone(event:EffectEvent):void
 			{
-				var tags:Array = [tag];
-				viewTags(tags, index);
+				if (curPosition + ncMost < clusters.length)
+				{
+					cls[curPosition + ncMost].visible = false;
+				}
 			}
 			
 			private function setAllRadio(flag:Boolean):void
@@ -262,76 +341,58 @@
 					}
 					else
 					{
-						doViewTags();
+						doFetchClusters();
 					}
                 }
-            }
+            }    
+            
 
-			public function viewTags(tags:Array, index:int):void
-			{
-				//trace("SearchView.viewTag(tag:String="+tag+", index:int="+index+") begin");		
-				if (index == 6 && !isOnly && tags.length == 1 && tagsSearched.contains(tags[0]))
+			// update the searched tag collection, and then do fetch clusters.
+			private function fetchClusters(tags:Array, index:int):void
+			{	
+				for (var i:int=0; i<tags.length; i++)
 				{
-					// delete tags
-					tempTag = tags[0];
-					Alert.show("Delete the tag \"" + tags[0] + "\"?", "Delete Confirm", Alert.YES | Alert.NO, this, alertClickHandler);
-					return;
-				}
-				else
-				{
-					for (var i:int=0; i<tags.length; i++)
+					if (!tagsSearched.contains(tags[i]))
 					{
-						if (!tagsSearched.contains(tags[i]))
-						{
-							tagsSearched.addItem(tags[i]);
-						}
+						tagsSearched.addItem(tags[i]);
 					}
 				}	
 				
-				doViewTags();
-				
-				//trace("SearchView.viewTag(tag:String, index:int) end");
+				doFetchClusters();
+
 			}
 			
-			private function doViewTags():void
+			private function doFetchClusters():void
 			{
-				setAllNotVisible();
+				setAllClustersNotVisible();
 				
 				setAllRadio(false);
 				
 				// make center tag visible
 				//clusCenter.visible = false;
-				if (isOnly || iBigger == clusCenter.index)
+				if (isOnly)
 				{
+					// relayout the center cluster first.
 					clusCenter.width = sClC.w;
 					clusCenter.height = sClC.h;
 					clusCenter.x = sClC.x;
 					clusCenter.y = sClC.y;
 					clusCenter.styleName = "clusterCanvasCircle";
+					clusCenter.tags = tagsSearched;
 				}
-				
-				if (selectedClusterIndex != 0)
-				{
-					cls[selectedClusterIndex].setStyleName("clusterCanvas");
-					selectedClusterIndex = 0;
-				}
-				cls[0].setStyleName("clusterCanvasPicked");
 				
 				if (tagsSearched.length > 0)
 				{
-					topKInSelectTag = (int)(txtTopKInSelectTag.text);
-					if (topKInSelectTag == 0)
-					{
-						topKInSelectTag = 100;
-					}
 					maxClusterNum = (int)(txtMaxClusterNum.text);
 					if (maxClusterNum == 0)
 					{
-						maxClusterNum = 100;
+						maxClusterNum = 20;
 					}
-					isExpansion = chkIsExpansion.selected;
-					isCluster = chkIsCluster.selected;
-					searchRO.searchTag(tagsSearched, topKInSelectTag, maxClusterNum, isExpansion, isCluster);
+					navPrevClus.visible = false;
+					navNextClus.visible = false;
+					setAllClustersNotVisible();
+					searchRO.searchTag(tagsSearched, topKInSelectTag, maxClusterNum, isExpansion, isExpansionWithCoMap, isCluster, minFreqTime, topKForExpension);
+					disableApplication();
 				}
 			}
          
@@ -363,34 +424,7 @@
 				
 				picPage = 0;
 				searchRO.getPicUrlForColorRank(null, picPage, selectedPic);
-			} 
-			
-			private function showBigPhoto(event:Event):void
-			{
-				/*
-				//trace("SearchView.showBigPhoto(event:Event) begin");
-				var img:Image = Image(event.currentTarget);
-				imgBig.source = img.source;
-				imgBig.x = 0;
-				imgBig.y = 0;
-				imgBig.width = img.width;
-				imgBig.height = img.height;
-				imgBig.visible = true;
-				imgBig.toolTip = String(tlstPhotos.selectedIndex);
-				expand.end();
-				expand.play();
-				*/
-			}
-			
-			private function hindBigPhoto(event:Event):void
-			{
-				/*
-				//trace("SearchView.hindBigPhoto(event:Event) begin");
-				contract.end();
-				contract.play();
-				unblurImage.play();
-				imgBig.visible=false;
-				*/
+				disableApplication();
 			}
 			
 			private function doResize(resize:Parallel):void
@@ -400,135 +434,14 @@
 				resize.play();
 			}
 			
-			public function showBiggerCluster(index:int):void
-			{		
-				//trace("SearchView.showBiggerCluster(index:int="+index+") begin");	
-				if (isOnly)
-				{
-					moveExClusBig.xTo = 0;
-					moveExClusBig.yTo = 0;
-					resExClusBig.widthTo = canCluster.width;
-					resExClusBig.heightTo = canCluster.height;
-					expandClusBig.target = clusCenter;
-					iBigger = index;
-					doResize(expandClusBig);
-					return;
-				}
-				
-				var ci:TagCluster = ((index>=0 && index<=5) ? cls[index] : clusCenter);
-				if (iBigger == -1 || iBigger != index)
-				{
-					var xBy:int = 0;
-					var yBy:int = 0;
-					var widthTo:int = sCluster.w * 2;
-					var heightTo:int = sCluster.h * 2;
-					switch (index)
-					{
-					case 0:
-						break;
-					case 1:
-						xBy = ci.width - widthTo;
-						break;
-					case 2:
-						yBy = ci.height - heightTo;
-						break;
-					case 3:
-						xBy = ci.width - widthTo;
-						yBy = ci.height - heightTo;
-						break;
-					case 4:
-						yBy = (ci.height - heightTo) / 2;
-						break;
-					case 5:
-						xBy = ci.width - widthTo;
-						yBy = (ci.height - heightTo) / 2;
-						break;					
-					case 6:
-						xBy = (ci.width - widthTo) / 2;
-						yBy = (ci.height - heightTo) / 2;
-						break;
-					default:
-						return;
-					}
-					
-					resExClusBig.widthTo = widthTo;
-					resExClusBig.heightTo = heightTo;
-					moveExClusBig.xTo = ci.x + xBy;
-					moveExClusBig.yTo = ci.y + yBy;
-					
-					expandClusBig.target = ci;
-					// change z-order of cls[index]
-					canCluster.removeChild(ci);
-					canCluster.addChild(ci);
-
-					if (iBigger != -1)
-					{
-						showSmallerCluster(iBigger);
-					}
-				}
-				else
-				{
-					moveExClusBig.xTo = 0;
-					moveExClusBig.yTo = 0;
-					resExClusBig.widthTo = canCluster.width;
-					resExClusBig.heightTo = canCluster.height;
-					expandClusBig.target = ci;
-				}
-				
-				iBigger = index;
-				doResize(expandClusBig);
-				//trace("SearchView.showBiggerCluster(index:int) end");
-			}
-			
-			public function showSmallerCluster(index:int=-1):void
+			private function fetchPicsByCluster(index:int=-1):void
 			{
-				//trace("SearchView.showSmallerCluster(index:int="+index+") begin");
-				
-				var ic:int = (index == -1 ? iBigger : index);
-
-				if (ic != -1)
-				{
-					if (isOnly)
-					{
-						moveConClusBig.xTo = sClCenter.x;
-						moveConClusBig.yTo = sClCenter.y;
-						resConClusBig.widthTo = sClCenter.w;
-						resConClusBig.heightTo = sClCenter.h;
-						contractClusBig.target = clusCenter;
-					}
-					else 
-					{
-						var cb:TagCluster;
-						var scb:Object;
-						if (ic >= 0 && ic <= 5)
-						{
-							cb = cls[ic];
-							scb = sCls[ic];
-						}
-						else
-						{
-							cb = clusCenter;
-							scb = sClC;
-						}
-						// contact the bigger one first
-						moveConClusBig.xTo = scb.x;
-						moveConClusBig.yTo = scb.y;
-						resConClusBig.widthTo = scb.w;
-						resConClusBig.heightTo = scb.h;
-						contractClusBig.target = cb;
-					}
-					doResize(contractClusBig);
-					if (index == -1)
-					{
-						iBigger = -1;
-					}
-				}
-				
-				if (index >=0 && index <=5)
+				if (index >=0)
 				{
 					// get pictures
 					picPage = 0;
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + index].tagList), tagsSearched, picPage);		
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[index].tagList), tagsSearched, picPage);		
+					disableApplication();
 					rbtnColor.enabled = false;
 					rbtnWavelet.enabled = false;
 					rbtnColor.selected = false;
@@ -538,18 +451,23 @@
 					
 					if (selectedClusterIndex != index)
 					{
-						cls[selectedClusterIndex].setStyleName("clusterCanvas");
-						cls[index].setStyleName("clusterCanvasPicked");
+						if (selectedClusterIndex >= 0)
+						{
+							cls[selectedClusterIndex].setStyleName("clusterCanvas");
+						}
 						selectedClusterIndex = index;
+						cls[selectedClusterIndex].setStyleName("clusterCanvasPicked");
+						clsWhole.tags = cls[selectedClusterIndex].tags;
+						clsWhole.pics = cls[selectedClusterIndex].pics;
 					}
 				}
-				//trace("SearchView.showSmallerCluster(index:int) end");
 			}
-			
 			
 			private function faultHandler(event:FaultEvent):void
 			{
-				trace("fault: "+event.message);
+				Alert.show("fault: "+event.message);			
+				enableApplication();
+				//trace("fault: "+event.message);
 			}
 			
 			private function getPicUrlForTagsRankHandler(event:ResultEvent):void
@@ -557,7 +475,8 @@
 				//trace("SearchView.getPicUrlForTagsHandler(event:ResultEvent) begin");
 				var a:ArrayCollection = ArrayCollection(event.result);
 				//inputTag.text = a[0];
-				photoArray.removeAll();
+				
+				var photos:ArrayCollection = new ArrayCollection();
 				var i:int;
 				if (tagsSearched != null && tagsSearched.length > 0)
 				{
@@ -573,11 +492,14 @@
 					}
 				}
 				
-				for (i=0; i<a.length; i++)
+				for (i=0; i<a.length && i<maxPicsPerDisplay; i++)
 				{	
-					photoArray.addItem({source: a.getItemAt(i), toolTip: toolTip, 
-						showBigPhoto: showBigPhoto, hindBigPhoto: hindBigPhoto});
+					photos.addItem(new PhotoVo(String(a.getItemAt(i)), toolTip));
 				}
+				
+				imgView.photos = photos;
+				
+				enableApplication();
 				
 				//trace("SearchView.getPicUrlForTagsHandler(event:ResultEvent) ends");
 			}
@@ -612,21 +534,27 @@
 				clusCenter.tags = tagsCenter;
 				dissolveIn.end();
 				dissolveIn.play();
+				
+				enableApplication();
 				//trace("SearchView.getTagCloudHandler(event:ResultEvent) end");
 			}
 			
 			private function searchTagHandler(event:ResultEvent):void
 			{
-				//trace("SearchView.searchTagHandler(event:ResultEvent) begin");
+				searchRO.getPivotNumPic();
+				
 				clusters = ArrayCollection(event.result);
-				curClusPage = 0;
+				curPosition = 0;
 				
-				assignClusPage();
+				// assign tags data to all clusters, including some global variable lick ncReal, etc.
+				assignAllClusters();	
 				
-				if (cls[0].tags != null)
-				{
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage].tagList), tagsSearched, picPage);
-				}
+				movLeft.targets = cls;
+				movRight.targets = cls;
+				
+				searchRO.getPicUrlForTagsRandom(getAllTagNames(), tagsSearched, picPage);
+				disableApplication();
+
 				// layout tags in center cluster
 				var temp:ArrayCollection = new ArrayCollection();
 				for (var i:int=0; i<tagsSearched.length; i++)
@@ -634,19 +562,17 @@
 					temp.addItem({label: tagsSearched[i]});
 				}
 				clusCenter.tags = temp;
-				//clusCenter.initTagCluster();
 				//clusCenter.visible = true;
 				
+				// center cluster effect
 				dissolveIn.end();
 				dissolveIn.play();
 				
-				// play effect
-				parShowAll.end();
-				parShowAll.play();
+				// clusters initial effects
+				layoutIntialClustersAfterFetch();
 				
 				// make not isOnly
 				isOnly = false;
-				iBigger = -1;
 				
 				navPrevClus.visible = false;
 				if (clusters.length > ncMost)
@@ -657,27 +583,62 @@
 				{
 					navNextClus.visible = false;
 				}
-				//trace("SearchView.searchTagHandler(event:ResultEvent) end");
+								
+				enableApplication();
+			}
+			
+			// the initalize effect after fetch clusters.
+			private function layoutIntialClustersAfterFetch():void
+			{
+				for (var i:int=0; i<ncReal; ++i)
+				{
+					parShowAll.children[i].target = cls[i];
+				}
+				parShowAll.end();
+				parShowAll.play();
+			}
+			
+			private function assignCluster(index:int):void
+			{		
+				var dataIndex:int = index;
+				
+				var tempb:ArrayCollection = new ArrayCollection();
+				var tempc:ArrayCollection = new ArrayCollection();
+				var b:ArrayCollection = ArrayCollection(clusters[dataIndex].tagList);
+				var c:ArrayCollection = ArrayCollection(clusters[dataIndex].picUrlList);
+				var j:int = 0;
+				if (b != null) 
+				{
+					for (j=0; j<b.length; j++)
+					{
+						tempb.addItem({label: b[j].tagName});
+					}
+				}
+				if (c != null)
+				{
+					for (j=0; j<c.length; j++)
+					{
+						tempc.addItem(c[j]);
+					}
+				}
+
+				cls[index].tags = tempb;
+				cls[index].pics = tempc;
 			}
 			
 			// maybe something wrong
-			private function assignClusPage():void
+			private function assignAllClusters():void
 			{
-				var offset:int = ncMost * curClusPage;
-				var len:int = clusters.length - offset;
+				var len:int = clusters.length - curPosition;
+				//ncReal = len <= ncAll ? len : ncAll;
 				ncReal = len <= ncMost ? len : ncMost;
 
-				for (var i:int=0; i<ncReal; i++)
+				for (var i:int=0; i<clusters.length; i++)
 				{
-					var temp:ArrayCollection = new ArrayCollection();
-					var b:ArrayCollection = ArrayCollection(clusters[offset+i].tagList);
-					for (var j:int=0; j<b.length; j++)
-					{
-						temp.addItem({label: b[j].tagName});
-					}
-
-					cls[i].tags = temp;
+					assignCluster(i);
 				}
+				
+				clsWhole.clearCluster();
 			}
 			
 			private function layoutAllClusters():void
@@ -685,38 +646,31 @@
 				// play effect
 				parShowAll.end();
 				parShowAll.play();
-				/*
-				for (var i:int=0; i<ncReal; i++)
-				{
-					cls[i].initTagCluster();
-				}
-				*/
 			}
 			
 			private function showPrevClusPage():void
 			{
-				//trace("SearchView.showPrevClusPage() begin");
-				//trace("curClusPage=" + curClusPage);
-				//trace("clusters.length=" + clusters.length);
-				if (curClusPage <= 0)
+				if (curPosition <= 0)
 				{
 					navPrevClus.visible = false;
 					return;
 				}
 				
-				setAllNotVisible();
-				curClusPage--;
+				cls[curPosition-1].visible = true;
+
+				movLeft.end();
+				movRight.end();
 				
-				assignClusPage();
-				
-				layoutAllClusters();
+				curPosition--;
+				//movRight.targets = cls;
+				movRight.play();
 				
 				if (!navNextClus.visible)
 				{
 					navNextClus.visible = true;
 				}
 				
-				if (curClusPage == 0)
+				if (curPosition <= 0)
 				{
 					navPrevClus.visible = false;
 				}
@@ -724,18 +678,22 @@
 			
 			private function showNextClusPage():void
 			{
-				//trace("SearchView.showNextClusPage() begin");
-				//trace("curClusPage=" + curClusPage);
-				//trace("clusters.length=" + clusters.length);
+				if (clusters.length - curPosition <= ncMost)
+				{
+					navNextClus.visible = false;
+					return;
+				}
 				
-				setAllNotVisible();
-				curClusPage++;
+				cls[curPosition+ncMost].visible = true;
+
+				movLeft.end();
+				movRight.end();
 				
-				assignClusPage();
+				curPosition++;
+				//movLeft.targets = cls;
+				movLeft.play();
 				
-				layoutAllClusters();
-				
-				if (clusters.length - ncMost * curClusPage <= ncMost)
+				if (clusters.length - curPosition <= ncMost)
 				{
 					navNextClus.visible = false;
 				}
@@ -755,19 +713,22 @@
 					if (rbtnColor.visible && rbtnColor.selected)
 					{
 						searchRO.getPicUrlForColorRank(null, --picPage, selectedPic);
+						disableApplication();
 					}
 					else if (rbtnWavelet.visible && rbtnWavelet.selected)
 					{
 						searchRO.getPicUrlForWaveLetRank(null, --picPage, selectedPic);
+						disableApplication();
 					}
 					else if (rbtnRandom.visible && rbtnRandom.selected)
 					{
-						searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, --picPage);
-						//searchRO.getPicUrlForTagsRandom(tagsSearched, --picPage);
+						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, --picPage);
+						disableApplication();
 					}
 					else
 					{
-						searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, --picPage);
+						searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, --picPage);
+						disableApplication();
 					}
 				}
 			}
@@ -776,23 +737,27 @@
 			{
 				if (rbtnColor.visible && rbtnColor.selected)
 				{
-					searchRO.getPicUrlForColorRank(null, ++picPage, selectedPic)
+					searchRO.getPicUrlForColorRank(null, ++picPage, selectedPic);
+					disableApplication();
 				}
 				else if (rbtnWavelet.visible && rbtnWavelet.selected)
 				{
-					searchRO.getPicUrlForWaveLetRank(null, ++picPage, selectedPic)
+					searchRO.getPicUrlForWaveLetRank(null, ++picPage, selectedPic);
+					disableApplication();
 				}
 				else if (rbtnRandom.visible && rbtnRandom.selected)
 				{
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, ++picPage);
-					//searchRO.getPicUrlForTagsRandom(tagsSearched, ++picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, ++picPage);
+					disableApplication();
 				}
 				else
 				{
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, ++picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, ++picPage);
+					disableApplication();
 				}
 			}	
 			
+			// get tags of one cluster
 			private function getTagNames(ar:ArrayCollection):ArrayCollection
 			{
 				var re:ArrayCollection = new ArrayCollection();
@@ -801,30 +766,25 @@
 					re.addItem(ar[i].tagName);
 				}
 				return re;
-			}	
-			
-			private function afterExpandCluster():void
-			{
-				if (!isOnly && expandClusBig.target.index >= 6)
-				{
-					clusCenter.initTagCluster(15, 10);
-				}
-				else
-				{
-					expandClusBig.target.initTagCluster();
-				}
 			}
 			
-			private function afterContractCluster():void
+			// get all tags of all clusters
+			private function getAllTagNames():ArrayCollection
 			{
-				if (!isOnly && contractClusBig.target.index >= 6)
+				var re:ArrayCollection = new ArrayCollection();
+
+				if (clusters != null)
 				{
-					clusCenter.initTagCluster(15, 10);
+					for (var i:int=0; i<clusters.length; ++i)
+					{
+						var ar:ArrayCollection = clusters[i].tagList;
+						for (var j:int=0; j<ar.length && j<TAGS_PER_CLUSTERS; ++j)
+						{
+							re.addItem(ar[j].tagName);
+						}
+					}
 				}
-				else
-				{
-					contractClusBig.target.initTagCluster();
-				}
+				return re;
 			}
 			
 			private function onSearchClick():void
@@ -839,7 +799,7 @@
 				{
 					return;
 				}
-				viewTags(ts, 6);
+				fetchClusters(ts, 6);
 				inputTag.text = "";
 			}
 			
@@ -857,34 +817,105 @@
 				if (label == "color")
 				{
 					imgSelected.blendMode=BlendMode.NORMAL;
-					searchRO.getPicUrlForColorRank(null, picPage, selectedPic);	
+					searchRO.getPicUrlForColorRank(null, picPage, selectedPic);
+					disableApplication();
 				}
 				else if (label == "wavelet")
 				{
 					imgSelected.blendMode=BlendMode.NORMAL;
 					searchRO.getPicUrlForWaveLetRank(null, picPage, selectedPic);
+					disableApplication();
 				}
 				else
 				{
 					imgSelected.blendMode=BlendMode.OVERLAY;
-					searchRO.getPicUrlForTagsRank(getTagNames(clusters[ncMost * curClusPage + selectedClusterIndex].tagList), tagsSearched, picPage);
-					//searchRO.getPicUrlForTagsRandom(tagsSearched, picPage);
+					searchRO.getPicUrlForTagsRandom(getTagNames(clusters[selectedClusterIndex].tagList), tagsSearched, picPage);
+					disableApplication();
 				}
 				imgSelected.visible = false;
 				imgSelected.visible = true;
+			}
+			
+			private function onTagClick(tag:String, index:int):void
+			{
+				var tags:Array = [tag];
+				fetchClusters(tags, index);
+			}
+			
+			private function onClusterClick(index:int):void
+			{
+				fetchPicsByCluster(index);
+			}
+			
+			private function onCenterTagClick(tag:String, index:int):void
+            {
+            	if (isOnly)
+            	{
+            		var tags:Array = [tag];
+            		fetchClusters(tags, index);
+            	}
+            	else
+				{
+	            	// show alert, user global variable tempTag to pass data.
+					tempTag = tag;
+					Alert.show("Delete the tag \"" + tag + "\"?", "Delete Confirm", Alert.YES | Alert.NO, this, alertClickHandler);
+				}
+            }
+            
+			// cluster click handler
+			private function clusterClickHandler(event:ClusterClickEvent):void
+			{
+				switch (event.detailTarget)
+				{
+				case ClusterClickEvent.MORE_TARGET:
+					// do nothing now.
+					break;
+				case ClusterClickEvent.TAG_TARGET:
+					onTagClick(String(event.data), event.index);
+					break;
+				case ClusterClickEvent.VACANCY_TARGET:
+				case ClusterClickEvent.PIC_TARGET:
+					onClusterClick(event.index);
+					break;
+				}
+			}
+			
+			// center cluster click handler
+			private function centerClusterClickHandler(event:ClusterClickEvent):void
+			{
+				switch (event.detailTarget)
+				{
+				case ClusterClickEvent.TAG_TARGET:
+					onCenterTagClick(String(event.data), event.index);
+					break;
+				}
+			}
+			
+			// left(whole) cluster click handler
+			private function leftClusterClickHandler(event:ClusterClickEvent):void
+			{
+				switch (event.detailTarget)
+				{
+				case ClusterClickEvent.TAG_TARGET:
+					onTagClick(String(event.data), selectedClusterIndex);
+					break;
+				}
+			}
+			
+			private function getPivotNumPicHandler(event:ResultEvent):void
+			{
+				picNum = int(event.result);
 			}
 		]]>
 	</mx:Script>
 	
 	<mx:RemoteObject id="searchRO" destination="dataQuery_SearchService"
-		fault="faultHandler(event)"/>
-
-	<mx:NumberValidator id="vldTopK" source="{txtTopKInSelectTag}" property="text"/>
+		fault="faultHandler(event)" showBusyCursor="true"/>
 
 	<mx:VBox width="100%" height="100%" styleName="colorPanel">
 		<!-- search input area -->
-		<mx:HBox width="100%" height="272">
-			<mx:VBox id="canSelected" width="250" height="100%" horizontalAlign="center">
+		<mx:HBox width="100%" height="248">
+			<mx:VBox id="canSelected" width="236" height="100%" horizontalAlign="center">
 				<mx:Image id="imgLogo" width="100%" height="50" 
 					source="@Embed('assets/logo.gif')" maintainAspectRatio="false"/>
 				<mx:Canvas width="100%" height="100%" borderStyle="solid"
@@ -908,19 +939,15 @@
 			</mx:VBox>
 			<mx:Spacer width="10"/>
 			<!-- input text & tag relation graph-->
-			<mx:VBox width="650" height="100%">
-				<mx:Spacer height="10"/>
+			<mx:VBox width="850" height="100%">
+				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
-					<mx:Label text="Tags:" y="2" styleName="label"/>
-					<mx:TextInput id="inputTag" width="151" x="38"/>
-					<mx:Label text="TopK:" x="188" styleName="label" y="2"/>
-					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" x="227" width="59" />
-					<mx:Label text="Cluster:" x="286" styleName="label" y="2"/>
-					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" x="338" width="54" />
-					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" x="395" width="86"  y="3"/>
-					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" x="475" width="68"  y="3"/>
-					<mx:Button label="Search" x="538" width="51" click="onSearchClick();"/>
-					<mx:Button label="Restart" x="591" width="56" click="onRestartClick();"/>
+					<mx:Label text="Input Tags:" y="1" styleName="label" x="5" width="99"/>
+					<mx:TextInput id="inputTag" width="297" x="98" toolTip="Input tags for search"/>
+					<mx:Label text="Max Clusters:" x="408" styleName="label" y="1"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="508" width="52" />
+					<mx:Button label="Search" x="585" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
+					<mx:Button label="Restart" x="677" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -929,55 +956,58 @@
 						id="navPrevClus"
 						toolTip="Previous Page"
 						imgWidth="12" imgHeight="12"
-						x="0" y="92"
+						x="0" y="125"
 					    click="showPrevClusPage()" />
 					<hisa:NavButton source="{ICON_RIGHT}" 
 						id="navNextClus"
 						toolTip="Next Page"
 						imgWidth="12" imgHeight="12"
-						x="623" y="92"
+						x="823" y="125"
 					    click="showNextClusPage()" />
 					<!--clipContent="false"-->
-					<mx:Repeater id="rpHrs" dataProvider="{sHrs}">
+					<mx:Repeater id="rpHrs" dataProvider="{HRS_SHAPE}">
 						<mx:HRule id="hrs" rotation="{rpHrs.currentItem.r}" visible="false"/>
 					</mx:Repeater>
 					
-					<mx:Repeater id="rpCls" dataProvider="{sCls}">
+					<mx:Repeater id="rpCls" dataProvider="{clusters}">
 						<hisa:TagCluster id="cls" index="{rpCls.currentIndex}"
-							bigger="{showBiggerCluster}" smaller="{showSmallerCluster}"
-							viewTag="{viewTag}" visible="false"/>
+							clusterClick="clusterClickHandler(event)"
+							styleName="clusterCanvas" visible="false" hasPics="true"
+							useHandCursor="true" buttonMode="true"
+							x="{FIRST_CLUSTER.x+rpCls.currentIndex*CLUSTER_XGAP}"
+							y="{FIRST_CLUSTER.y}" width="{CLUSTER_SIZE.w}"
+							height="{CLUSTER_SIZE.h}"/>
 					</mx:Repeater>
 						
 					<!--
 					<hisa:Tag id="tagCenter" x="293.5" y="102" text="TagCenter" visible="false"/>
 					-->
-					<hisa:TagCluster id="clusCenter" index="6"
-						bigger="{showBiggerCluster}" smaller="{showSmallerCluster}" 
-						viewTag="{viewTag}"/>	
+					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
+						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
+						
+					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" styleName="label" color="#000080"/>
+					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="49" height="49" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true"/>
+					<mx:Button icon="{ICON_REDO}" x="95" y="10" width="49" height="49"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
-		
+
 		<!-- image view -->
 		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
-			<hisa:NavButton source="{ICON_LEFT}" 
+			<hisa:TagCluster id="clsWhole" index="{WHOLE_CLUSTER_INDEX}"
+					visible="true" hasPics="true"
+					clusterClick="leftClusterClickHandler(event)"
+					width="210" height="100%" styleName="clusterCanvasWhole" />
+			<hisa:NavButton source="{ICON_LEFT}"
 				id="navPrevPic"
 				toolTip="Previous Page"
 				imgWidth="12" imgHeight="12"
-			    click="showPrevPicPage()" />		
-			<mx:Canvas width="100%" height="100%">
-				<mx:TileList id="tlstPhotos" height="100%" width="100%" 
-		            rowHeight="120" columnWidth="120"
-		            dataProvider="{photoArray}" itemRenderer="Thumbnail">
-		            <!--dragEnabled="true" dropEnabled="true" dragMoveEnabled="true"-->
-		        </mx:TileList>
-				<mx:Image id="imgBig" visible="false" 
-					rollOverEffect="{blurImage}"
-					rollOutEffect="{unblurImage}"
-					click="hindBigPhoto(event);"
-					/>
-			</mx:Canvas>
-			<hisa:NavButton source="{ICON_RIGHT}" 
+			    click="showPrevPicPage()" />
+
+			<!-- image view -->
+			<hisa:ImageView id="imgView" width="100%" height="100%"/>
+
+			<hisa:NavButton source="{ICON_RIGHT}"
 				id="navNextPic"
 				toolTip="Next Page"
 				imgWidth="12" imgHeight="12"
@@ -995,32 +1025,8 @@
         blurXFrom="20.0" blurXTo="0.0" 
         blurYFrom="20.0" blurYTo="0.0" 
         color="0xffb000"/>
-    <mx:Blur id="blurImage" duration="500" 
-        blurXFrom="0.0" blurXTo="5.0" 
-        blurYFrom="0.0" blurYTo="5.0"/>
-    <mx:Blur id="unblurImage" duration="100" 
-        blurXFrom="5.0" blurXTo="0.0" 
-        blurYFrom="5.0" blurYTo="0.0"/>
-            
-    <mx:Dissolve id="dissolveOut" duration="500" alphaFrom="1.0" alphaTo="0.0"/>
-    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" 
-    	effectEnd="if (isOnly) clusCenter.initTagCluster(); else clusCenter.initTagCluster(15, 10);"/>
-    	
-	<mx:Resize id="expand" target="{imgBig}" widthTo="300" heightTo="300"/>
-    <mx:Resize id="contract" target="{imgBig}" widthTo="120" heightTo="120"/>
-    
-    <!-- expand one cluster	-->
-    <mx:Parallel id="expandClusBig" duration="500">
-        <mx:Move id="moveExClusBig" />
-        <mx:Resize id="resExClusBig" 
-    		effectEnd="afterExpandCluster();"/>
-    </mx:Parallel>
 
-	<!-- contract one cluster -->
-    <mx:Parallel id="contractClusBig" duration="300">
-        <mx:Move id="moveConClusBig"/>
-        <mx:Resize id="resConClusBig"
-    		effectEnd="afterContractCluster();"/>
-    </mx:Parallel>
+    <mx:Dissolve id="dissolveOut" duration="500" alphaFrom="1.0" alphaTo="0.0"/>
+    <mx:Dissolve id="dissolveIn" duration="500" alphaFrom="0.0" alphaTo="1.0" target="{clusCenter}" />
     
 </mx:Canvas>

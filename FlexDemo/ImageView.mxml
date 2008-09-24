@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml">
+	<mx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			[Bindable]
+			public var photos:ArrayCollection = new ArrayCollection();
+			
+			private function showBigPhoto(event:Event):void
+			{
+				/*
+				//trace("SearchView.showBigPhoto(event:Event) begin");
+				var img:Image = Image(event.currentTarget);
+				imgBig.source = img.source;
+				imgBig.x = 0;
+				imgBig.y = 0;
+				imgBig.width = img.width;
+				imgBig.height = img.height;
+				imgBig.visible = true;
+				imgBig.toolTip = String(tlstPhotos.selectedIndex);
+				expand.end();
+				expand.play();
+				*/
+			}
+			
+			private function hindBigPhoto(event:Event):void
+			{
+				/*
+				//trace("SearchView.hindBigPhoto(event:Event) begin");
+				contract.end();
+				contract.play();
+				unblurImage.play();
+				imgBig.visible=false;
+				*/
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:TileList id="tlstPhotos" height="100%" width="100%" 
+        rowHeight="120" columnWidth="120"
+        dataProvider="{photos}" itemRenderer="Thumbnail">
+        <!--dragEnabled="true" dropEnabled="true" dragMoveEnabled="true"-->
+    </mx:TileList>
+	<mx:Image id="imgBig" visible="false" 
+		rollOverEffect="{blurImage}"
+		rollOutEffect="{unblurImage}"
+		click="hindBigPhoto(event);"
+		/>
+	
+	<mx:Blur id="blurImage" duration="500" 
+        blurXFrom="0.0" blurXTo="5.0" 
+        blurYFrom="0.0" blurYTo="5.0"/>
+    <mx:Blur id="unblurImage" duration="100" 
+        blurXFrom="5.0" blurXTo="0.0" 
+        blurYFrom="5.0" blurYTo="0.0"/>
+        
+    <mx:Resize id="expand" target="{imgBig}" widthTo="300" heightTo="300"/>
+    <mx:Resize id="contract" target="{imgBig}" widthTo="120" heightTo="120"/>
+</mx:Canvas>
