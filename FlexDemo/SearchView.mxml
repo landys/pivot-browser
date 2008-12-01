@@ -127,7 +127,7 @@
 			private var maxClusterNum:int = 20;
 			
 			[Bindable]
-			private var isExpansion:Boolean = true;
+			private var isExpansion:Boolean = false;
 			
 			[Bindable]
 			private var isCluster:Boolean = true; 
@@ -383,6 +383,11 @@
 				
 				if (tagsSearched.length > 0)
 				{
+					topKInSelectTag = (int)(txtTopKInSelectTag.text);
+					if (topKInSelectTag == 0)
+					{
+						topKInSelectTag = 100;
+					}
 					maxClusterNum = (int)(txtMaxClusterNum.text);
 					if (maxClusterNum == 0)
 					{
@@ -422,9 +427,9 @@
 				rbtnRandom.enabled = true;
 				rbtnColor.selected = true;
 				
-				picPage = 0;
-				searchRO.getPicUrlForColorRank(null, picPage, selectedPic);
-				disableApplication();
+				//picPage = 0;
+				//searchRO.getPicUrlForColorRank(null, picPage, selectedPic);
+				//disableApplication();
 			}
 			
 			private function doResize(resize:Parallel):void
@@ -915,7 +920,7 @@
 	<mx:VBox width="100%" height="100%" styleName="colorPanel">
 		<!-- search input area -->
 		<mx:HBox width="100%" height="248">
-			<mx:VBox id="canSelected" width="236" height="100%" horizontalAlign="center">
+			<mx:VBox id="canSelected" width="0" height="100%" horizontalAlign="center" visible="false">
 				<mx:Image id="imgLogo" width="100%" height="50" 
 					source="@Embed('assets/logo.gif')" maintainAspectRatio="false"/>
 				<mx:Canvas width="100%" height="100%" borderStyle="solid"
@@ -927,7 +932,7 @@
 	            		rollOutEffect="{unglowImage}"
 						completeEffect="Fade"/>
 				</mx:Canvas>
-				<mx:HBox width="100%" height="21" horizontalAlign="center">
+				<mx:HBox width="100%" height="21" horizontalAlign="center" visible="false">
 					<mx:RadioButtonGroup id="feature" itemClick="radioChange(event)"/>
 					<mx:RadioButton label="color" groupName="feature" selected="false" enabled="false"
 						id="rbtnColor"/>
@@ -937,17 +942,19 @@
 						id="rbtnRandom"/>
 				</mx:HBox>
 			</mx:VBox>
-			<mx:Spacer width="10"/>
+			<mx:Spacer width="0" visible="false"/>
 			<!-- input text & tag relation graph-->
-			<mx:VBox width="850" height="100%">
+			<mx:VBox width="100%" height="100%">
 				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
 					<mx:Label text="Input Tags:" y="1" styleName="label" x="5" width="99"/>
-					<mx:TextInput id="inputTag" width="297" x="98" toolTip="Input tags for search"/>
-					<mx:Label text="Max Clusters:" x="408" styleName="label" y="1"/>
-					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="508" width="52" />
-					<mx:Button label="Search" x="585" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
-					<mx:Button label="Restart" x="677" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
+					<mx:TextInput id="inputTag" width="245" x="98" toolTip="Input tags for search" fontSize="12"/>
+					<mx:Label text="TopK:" x="351" styleName="label" y="0"/>
+					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" x="401" width="65" fontSize="12"/>
+					<mx:Label text="Clusters:" x="480" styleName="label" y="0"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="544" width="52"  fontSize="12"/>
+					<mx:Button label="Search" x="613" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
+					<mx:Button label="Restart" x="697" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -986,8 +993,8 @@
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 						
 					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" styleName="label" color="#000080"/>
-					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="49" height="49" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true"/>
-					<mx:Button icon="{ICON_REDO}" x="95" y="10" width="49" height="49"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
+					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="49" height="49" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true" visible="false"/>
+					<mx:Button icon="{ICON_REDO}" x="95" y="10" width="49" height="49"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true" visible="false"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
