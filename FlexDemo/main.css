@@ -106,14 +106,14 @@ ToolTip
 .clusterCanvas
 {
 	borderStyle:	solid;
-	cornerRadius:	20;
+	/*cornerRadius:	20;*/
 	backgroundColor:	#f0f0f0
 }
 
 .clusterCanvasPicked
 {
 	borderStyle:	solid;
-	cornerRadius:	20;
+	/*cornerRadius:	20;*/
 	backgroundColor:	#b0b0b0
 }
 

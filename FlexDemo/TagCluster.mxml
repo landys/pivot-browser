@@ -29,6 +29,10 @@
 			[Bindable]
 			public var hasPics:Boolean = false;
 			
+			// the most tag number visible in the cluster, if more, "..." shows
+			[Bindable]
+			public var maxTagsVisible:int = int.MAX_VALUE;
+			
 			public function setStyleName(name:String):void
 			{
 				styleName = name;
@@ -81,6 +85,15 @@
 				// replace all linkbuttons
 				for (i=1; i<lbtns.length; i++)
 				{
+					// max tags shown in the cluster rearched
+					if (i >= maxTagsVisible)
+					{
+						lbtnMore.x = lbtns[i-1].x + lbtns[i-1].width;
+						lbtnMore.y = lbtns[i-1].y;
+						lbtnMore.visible = true;
+						break;
+					}
+					
 					// check current row
 					if (lbtns[i-1].x + lbtns[i-1].width + lbtns[i].width - cw > 0)
 					{	// check new row
@@ -195,7 +208,7 @@
 				    label="{rp.currentItem.label}" 
 				    click="tagClick(event);"/>
 		    </mx:Repeater>
-		    <mx:LinkButton id="lbtnMore" height="20" width="18"
+		    <mx:LinkButton id="lbtnMore" height="20" width="24"
 				styleName="tagLinkButton"
 			    label="..." visible="false"
 			    click="moreClick(event);"/>

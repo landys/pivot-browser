@@ -41,13 +41,13 @@
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
 			// size of each cluster
-			private const CLUSTER_SIZE:Object = {w:190, h:112};
+			private const CLUSTER_SIZE:Object = {w:250, h:110};
 			
 			// positioin of first cluseter
 			private const FIRST_CLUSTER:Point = new Point(26, 80);
 			
 			// gap between clusters
-			private const CLUSTER_XGAP:int = 202;
+			private const CLUSTER_XGAP:int = 262;
 			
 			// index of the center cluster
 			private const CENTER_CLUSTER_INDEX:int = 200;
@@ -73,7 +73,7 @@
 				{x:VISIBLE_CLUSTERS_SHAPE[3].x+CLUSTER_SIZE.w/2, y:VISIBLE_CLUSTERS_SHAPE[3].y+5, w:200, h:2, r:-170}]);
 				
 			// the size of beginning center cluster	
-			private var sClCenter:Object = {x:200, y:18, w:420, h:166}; 
+			private var sClCenter:Object = {x:326, y:18, w:420, h:166}; 
 			
 			// the size of center cluster
 			//private var sClC:Object = {x:258, y:74, w:140, h:70}; 
@@ -250,7 +250,7 @@
 				setAllRadio(false);
 				navPrevClus.visible = false;
 				navNextClus.visible = false;
-				clusCenter.setStyleName("clusterCanvas");
+				//clusCenter.setStyleName("clusterCanvas");
 				clusters.removeAll();
 				clsWhole.setStyleName("clusterCanvasWhole");
 				selectedClusterIndex = -1;
@@ -919,7 +919,8 @@
 
 	<mx:VBox width="100%" height="100%" styleName="colorPanel">
 		<!-- search input area -->
-		<mx:HBox width="100%" height="248">
+		<mx:HBox width="100%" height="234">
+			<!-- width=236 -->
 			<mx:VBox id="canSelected" width="0" height="100%" horizontalAlign="center" visible="false">
 				<mx:Image id="imgLogo" width="100%" height="50" 
 					source="@Embed('assets/logo.gif')" maintainAspectRatio="false"/>
@@ -942,19 +943,19 @@
 						id="rbtnRandom"/>
 				</mx:HBox>
 			</mx:VBox>
-			<mx:Spacer width="0" visible="false"/>
+			<!--<mx:Spacer width="10" visible="false"/>-->
 			<!-- input text & tag relation graph-->
-			<mx:VBox width="100%" height="100%">
-				<mx:Spacer height="8"/>
+			<mx:VBox width="1096" height="100%">
+				<!--<mx:Spacer height="8"/> -->
 				<mx:Canvas width="100%">
-					<mx:Label text="Input Tags:" y="1" styleName="label" x="5" width="99"/>
-					<mx:TextInput id="inputTag" width="245" x="98" toolTip="Input tags for search" fontSize="12"/>
-					<mx:Label text="TopK:" x="351" styleName="label" y="0"/>
-					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" x="401" width="65" fontSize="12"/>
-					<mx:Label text="Clusters:" x="480" styleName="label" y="0"/>
-					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="544" width="52"  fontSize="12"/>
-					<mx:Button label="Search" x="613" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
-					<mx:Button label="Restart" x="697" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
+					<mx:Label text="Input Tags:" y="0" styleName="label" x="10" width="99"/>
+					<mx:TextInput id="inputTag" width="379" x="98" toolTip="Input tags for search" fontSize="12"/>
+					<mx:Label text="TopK:" x="513" styleName="label" y="0"/>
+					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" x="563" width="65" fontSize="12"/>
+					<mx:Label text="Clusters:" x="649" styleName="label" y="0"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="713" width="52"  fontSize="12"/>
+					<mx:Button label="Search" x="794" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
+					<mx:Button label="Restart" x="878" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -969,7 +970,7 @@
 						id="navNextClus"
 						toolTip="Next Page"
 						imgWidth="12" imgHeight="12"
-						x="823" y="125"
+						x="1063" y="125"
 					    click="showNextClusPage()" />
 					<!--clipContent="false"-->
 					<mx:Repeater id="rpHrs" dataProvider="{HRS_SHAPE}">
@@ -980,6 +981,7 @@
 						<hisa:TagCluster id="cls" index="{rpCls.currentIndex}"
 							clusterClick="clusterClickHandler(event)"
 							styleName="clusterCanvas" visible="false" hasPics="true"
+							maxTagsVisible="4"
 							useHandCursor="true" buttonMode="true"
 							x="{FIRST_CLUSTER.x+rpCls.currentIndex*CLUSTER_XGAP}"
 							y="{FIRST_CLUSTER.y}" width="{CLUSTER_SIZE.w}"
@@ -992,7 +994,7 @@
 					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 						
-					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" styleName="label" color="#000080"/>
+					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="790" y="10" width="146" styleName="label" color="#000080"/>
 					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="49" height="49" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true" visible="false"/>
 					<mx:Button icon="{ICON_REDO}" x="95" y="10" width="49" height="49"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true" visible="false"/>
 		        </mx:Canvas>
