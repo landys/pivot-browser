@@ -1,5 +1,11 @@
 package DataQuery;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -243,7 +249,13 @@ public class ClusterTag {
                 ucMatrix = ukMatrix.viewSelection(rowIndexes, null);
                 //System.out.println("ucMatrix");
                 //Utils.printMatrix(ucMatrix);
-                List<Set<Long>> pp = splitCluster(ucMatrix, idList);
+                
+                //add for select initial center
+//                int[] startingCenterRawId = selectInitialCenter(rowIndexes);                
+//                List<Set<Long>> pp = splitCluster(ucMatrix, idList, startingCenterRawId);
+                //如果不需要选中心 那么设置startingCenterRawId == null
+                List<Set<Long>> pp = splitCluster(ucMatrix, idList,null);
+                
                 
                 Set<Long> cluster1 = pp.get(0);
                 Set<Long> cluster2 = pp.get(1);
@@ -275,6 +287,36 @@ public class ClusterTag {
         }       
         return p;
     }
+
+
+	private int[] selectInitialCenter(int[] rowIndexes) {
+		//取出一个方阵
+		DoubleMatrix2D matrix = weightMatrix.viewSelection(rowIndexes,rowIndexes);
+		
+		//here we just use binary split    
+		int [] startingCenterRawId = new int [2];       
+		//初始化
+		double minValue = Double.MAX_VALUE;
+		int rowId = -1;
+		int colId = -1;
+		for(int i = 0; i < matrix.rows(); i++)
+			for(int j = i + 1; j < matrix.columns(); j++) {                		
+				double value = matrix.get(i, j);
+				if(value < minValue) {
+					minValue = value;
+					rowId = i;
+					colId = j;
+				}
+			}
+		
+		startingCenterRawId[0] = rowId;
+		startingCenterRawId[1] = colId;
+		//如果选不出来
+		if(startingCenterRawId[0] == -1 || startingCenterRawId[1] == -1) 
+			return null;
+		else
+			return startingCenterRawId;
+	}
 
 
     /**
@@ -345,8 +387,10 @@ public class ClusterTag {
      * 接受两个参数
      * 参数一是uc矩阵
      * 参数二是该矩阵对应的原始id 数组
+     * 
+     * int [] startingCenterId 是ucMatrix里面的id
      */
-    private List<Set<Long>> splitCluster(DoubleMatrix2D ucMatrix,List<Long> rawIdList) {
+    private List<Set<Long>> splitCluster(DoubleMatrix2D ucMatrix,List<Long> rawIdList, int [] startingCenterRawId) {
         
         List<Set<Long>> list = new ArrayList<Set<Long>>();
         
@@ -362,7 +406,16 @@ public class ClusterTag {
         KMeans kmeans = new KMeans(points,dim,2);
         
         //经验参数
-        PointND[] centers = kmeans.getCenters(0.01, 50);
+        PointND[] centers;
+        if(startingCenterRawId != null) {//使用初始参数
+        	PointND[] startingCenters = new PointND[2];
+        	startingCenters[0] = points[startingCenterRawId[0]];
+        	startingCenters[1] = points[startingCenterRawId[1]];      
+        	centers = kmeans.getCenters(0.01, 50, startingCenters);
+        }
+        else						//不使用初始参数
+        	centers = kmeans.getCenters(0.01, 50);
+        
         
         //这里 length肯定为2
         for(int i = 0; i < centers.length; i++) {
@@ -480,13 +533,15 @@ public class ClusterTag {
     }
     
     
-    private void printCluster(Map<Set<Long>,Double> clusters, SelectTag select) {       
+    private double printCluster(Map<Set<Long>,Double> clusters, SelectTag select) {       
         
         //对于每一个cluster
         int i = 1;
+        double totalQvalue = 0;
         for(Set<Long> cluster : clusters.keySet()) {
             double qValue = clusters.get(cluster);
-            System.out.println("cluster : " + i + " Qvalue : " + qValue);           
+            System.out.println("cluster : " + i + " Qvalue : " + qValue);  
+            totalQvalue += qValue;
             for(Long id : cluster) {
                 Long rawId = select.getIdMapRawId().get(id);
                 String tag = select.getDataInput().getIdIndex().get(rawId);
@@ -495,111 +550,165 @@ public class ClusterTag {
             }
             i++;
             System.out.println();
-        }       
+        }    
+        System.out.println("Num of Cluster: " + i + "	Total Qvalue For This Query: " + totalQvalue);
+        return totalQvalue;
     }
     
     public static void main(String[] args) throws Exception {       
         IndexService indexService = new IndexService();
-        /*List<QueryExpension> queryList = new ArrayList<QueryExpension>();
-        List<String>  synWordList = new ArrayList<String>();
-        String queryWord = "flower";
-        synWordList.add("flower");
-        synWordList.add("flowers");
-        synWordList.add("bloom");
-        synWordList.add("blooms");
-        synWordList.add("blossom");
-        synWordList.add("blossoms");        
-        QueryExpension querExpension = new QueryExpension();
-        querExpension.setQueryWord(queryWord);
-        querExpension.setSynWordList(synWordList);
-        queryList.add(querExpension);
         
-        synWordList = new ArrayList<String>();
-        queryWord = "girl";
-        synWordList.add("girl");
-        querExpension = new QueryExpension();
-        querExpension.setQueryWord(queryWord);
-        querExpension.setSynWordList(synWordList);
-        //queryList.add(querExpension);*/
-        double averageClusterTime = 0;
-        double averageSelectTime1 = 0;
-        double averageSelectTime2 = 0;
-        double averageSelectTimeTotal = 0;
-        int round = 0;
-        for (int i = 0; i < 1; i++) {
-            List<String> list = new ArrayList<String>();
-            list.add("dog");
-//          list.add("window");
-//          list.add("baby");
-//          list.add("movie");
-            list.add("film");
-//          list.add("poodle");
-//          list.add("tv");
-//          list.add("flower");
-//          list.add("dog");
-//          list.add("puppy");
-//          list.add("weimaraner");
-//          list.add("flower");
-//          list.add("flowers");
-//          list.add("bloom");
-//          list.add("blooms");
-//          list.add("blossom");
-//          list.add("blossoms");
-//          list.add("garden");
-//          list.add("red");
-//          list.add("white");
-            List<QueryExpension> pivotTagList = Utils
-                    .convertRawListToPivotTagList(list, indexService
-                            .getDataInput(), true, true, Constants.minFreqTime, Constants.topKForExpension);
-            if (pivotTagList.size() == 0)
-                continue;
-            long startTime = System.currentTimeMillis();
-            SelectTag select = new SelectTag(Constants.topK, pivotTagList,
-                    indexService.getDataInput());
-            long endTime = System.currentTimeMillis();
-            averageSelectTimeTotal += endTime - startTime;
-
-            averageSelectTime1 += SelectTag.time1;
-            averageSelectTime2 += SelectTag.time2;
-
-            startTime = System.currentTimeMillis();
-            ClusterTag tagsCluster = new ClusterTag(Constants.maxClusterNum,
-                    Constants.maxClusterNum, select);
-            endTime = System.currentTimeMillis();
-            averageClusterTime += endTime - startTime;
-
-            tagsCluster.printCluster(tagsCluster.getClusters(), select);
-
-            round++;            
+        //读入所有list
+    	BufferedReader br = new BufferedReader(new InputStreamReader(
+				new FileInputStream("./samplequery.txt")));
+    	
+    	BufferedWriter wr = new BufferedWriter(new OutputStreamWriter(
+				new FileOutputStream("./result.txt")));
+    	
+    	List<String> inputStrList = new ArrayList<String>();
+    	
+        while(true) {
+   			String line = br.readLine();
+   			if(line == null)
+   				break;
+   			String [] value = line.split("\\s");
+   			inputStrList.add(value[0]);
+        }
+        	
+        br.close();
+        
+        double totalQvalue = 0;
+        int i = 1;
+        for(String str : inputStrList) {
+        	System.out.println("Processing	" + i);
+        	List<String> list = new ArrayList<String>();
+        	list.add(str);
+        	List<QueryExpension> pivotTagList = Utils
+            .convertRawListToPivotTagList(list, indexService
+                    .getDataInput(), false, true, Constants.minFreqTime, Constants.topKForExpension);
+        	if (pivotTagList.size() == 0)
+        		continue;
+        	 SelectTag select = new SelectTag(Constants.topK, pivotTagList,
+                     indexService.getDataInput());   
+        	 ClusterTag tagsCluster = new ClusterTag(Constants.maxClusterNum,
+                     Constants.maxClusterNum, select);
+        	 
+        	 double currentQvalue = tagsCluster.printCluster(tagsCluster.getClusters(), select);
+        	 
+        	 wr.write(currentQvalue + "		" + tagsCluster.getClusters().size() + "\n");
+        	 totalQvalue += currentQvalue;
+        	 i++;
         }
         
-        System.out.println("average select total time: " + averageSelectTimeTotal / round);
-        
-        System.out.println("average select 1 time: " + averageSelectTime1 / round);
-        
-        System.out.println("average select 2 time: " + averageSelectTime2 / round);
-        
-        System.out.println("average cluster time: " + averageClusterTime / round);
-        
-        //SelectTag select = new SelectTag(Constants.topK,queryList,indexService.getDataInput());
-        // 
-        
-        
-        //System.out.println("tranMatrix");
-        
-        //Utils.printMatrix(tagsCluster.getTraMatrix());
-        
-        //System.out.println("EigenMatrix");
-        
-        //Utils.printMatrix(tagsCluster.getEigenMatrix());
-        
-        
-        //System.out.println("Cluster");
-        
-        //tagsCluster.printCluster(tagsCluster.getClusters(),select);       
-        
+        wr.write("total Qvalue: " + totalQvalue);
+        System.out.println("total Qvalue: " + totalQvalue);
+        wr.close();
         
     }
+    
+    
+//    public static void main(String[] args) throws Exception {       
+//        IndexService indexService = new IndexService();
+//        /*List<QueryExpension> queryList = new ArrayList<QueryExpension>();
+//        List<String>  synWordList = new ArrayList<String>();
+//        String queryWord = "flower";
+//        synWordList.add("flower");
+//        synWordList.add("flowers");
+//        synWordList.add("bloom");
+//        synWordList.add("blooms");
+//        synWordList.add("blossom");
+//        synWordList.add("blossoms");        
+//        QueryExpension querExpension = new QueryExpension();
+//        querExpension.setQueryWord(queryWord);
+//        querExpension.setSynWordList(synWordList);
+//        queryList.add(querExpension);
+//        
+//        synWordList = new ArrayList<String>();
+//        queryWord = "girl";
+//        synWordList.add("girl");
+//        querExpension = new QueryExpension();
+//        querExpension.setQueryWord(queryWord);
+//        querExpension.setSynWordList(synWordList);
+//        //queryList.add(querExpension);*/
+//        double averageClusterTime = 0;
+//        double averageSelectTime1 = 0;
+//        double averageSelectTime2 = 0;
+//        double averageSelectTimeTotal = 0;
+//        int round = 0;
+//        for (int i = 0; i < 1; i++) {
+//            List<String> list = new ArrayList<String>();
+//            list.add("dog");
+////          list.add("window");
+////          list.add("baby");
+////          list.add("movie");
+//            list.add("film");
+////          list.add("poodle");
+////          list.add("tv");
+////          list.add("flower");
+////          list.add("dog");
+////          list.add("puppy");
+////          list.add("weimaraner");
+////          list.add("flower");
+////          list.add("flowers");
+////          list.add("bloom");
+////          list.add("blooms");
+////          list.add("blossom");
+////          list.add("blossoms");
+////          list.add("garden");
+////          list.add("red");
+////          list.add("white");
+//            List<QueryExpension> pivotTagList = Utils
+//                    .convertRawListToPivotTagList(list, indexService
+//                            .getDataInput(), true, true, Constants.minFreqTime, Constants.topKForExpension);
+//            if (pivotTagList.size() == 0)
+//                continue;
+//            long startTime = System.currentTimeMillis();
+//            SelectTag select = new SelectTag(Constants.topK, pivotTagList,
+//                    indexService.getDataInput());
+//            long endTime = System.currentTimeMillis();
+//            averageSelectTimeTotal += endTime - startTime;
+//
+//            averageSelectTime1 += SelectTag.time1;
+//            averageSelectTime2 += SelectTag.time2;
+//
+//            startTime = System.currentTimeMillis();
+//            ClusterTag tagsCluster = new ClusterTag(Constants.maxClusterNum,
+//                    Constants.maxClusterNum, select);
+//            endTime = System.currentTimeMillis();
+//            averageClusterTime += endTime - startTime;
+//
+//            tagsCluster.printCluster(tagsCluster.getClusters(), select);
+//
+//            round++;            
+//        }
+//        
+//        System.out.println("average select total time: " + averageSelectTimeTotal / round);
+//        
+//        System.out.println("average select 1 time: " + averageSelectTime1 / round);
+//        
+//        System.out.println("average select 2 time: " + averageSelectTime2 / round);
+//        
+//        System.out.println("average cluster time: " + averageClusterTime / round);
+//        
+//        //SelectTag select = new SelectTag(Constants.topK,queryList,indexService.getDataInput());
+//        // 
+//        
+//        
+//        //System.out.println("tranMatrix");
+//        
+//        //Utils.printMatrix(tagsCluster.getTraMatrix());
+//        
+//        //System.out.println("EigenMatrix");
+//        
+//        //Utils.printMatrix(tagsCluster.getEigenMatrix());
+//        
+//        
+//        //System.out.println("Cluster");
+//        
+//        //tagsCluster.printCluster(tagsCluster.getClusters(),select);       
+//        
+//        
+//    }
     
     
     

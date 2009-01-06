@@ -382,6 +382,10 @@ public class SelectTag {
             //分块处理
             //double selfFreq = coMatrix.getQuick(rowId.intValue(), rowId.intValue());
             double selfFreq = dataInput.getCoMatrixValue(rowId.intValue(), rowId.intValue());
+            //a bug by key "zzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+            //index problem
+            if(selfFreq == 0)
+            	selfFreq = 1;
             double totalDoc = dataInput.getTotalDoc();
             double score = coTimes * Math.log(totalDoc / selfFreq);
             
@@ -655,11 +659,11 @@ public class SelectTag {
     public static void main(String[] args) throws Exception {
         IndexService indexService = new IndexService();
         List<String> list = new ArrayList<String>();
-        list.add("dog");
-//      list.add("window");
+//       list.add("dog");
+        list.add("西安");
 //      list.add("baby");
 //      list.add("movie");
-        list.add("film");
+//        list.add("film");
 //      list.add("poodle");
 //      list.add("tv");
 //      list.add("flower");
@@ -676,7 +680,7 @@ public class SelectTag {
 //      list.add("red");
 //      list.add("white");
         double averageTime = 0;
-        List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(list,indexService.getDataInput(),true, true, Constants.minFreqTime, Constants.topKForExpension);
+        List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(list,indexService.getDataInput(),false, true, Constants.minFreqTime, Constants.topKForExpension);
         if (pivotTagList.size() == 0) {
             System.out.println("can't find word "); 
             return ;
@@ -693,7 +697,7 @@ public class SelectTag {
             }
             
             long startTime = System.currentTimeMillis();
-            SelectTag select = new SelectTag(Constants.topK, pivotTagList,
+            SelectTag select = new SelectTag(10, pivotTagList,
                     indexService.getDataInput());
             long endTime = System.currentTimeMillis();
 

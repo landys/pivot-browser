@@ -2,28 +2,34 @@ package utils;
 
 public class Constants {
 	
-	static public String lucencePath = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/lucence/";
+	static public String lucencePath = "./lucence/";
 	
 	static public String lucenceTagFieldName = "tags";
 	
 	static public String lucenceTitleFieldName = "titles";
 	
-	static public String lucenceColorFeatureFieldName = "color";
+	static public String lucenceDescriptionFieldName = "description";
 	
-	static public String lucenceWaveLetFeatureFieldName = "wavelet";
+	static public String lucenceVideourlFieldName = "videourl";
 	
+	static public String lucenceSnapshotFieldName = "snapshot";
 	
-	static public String lucenceSiftFeatureFieldName = "shape";
+//	static public String lucenceColorFeatureFieldName = "color";
+//	
+//	static public String lucenceWaveLetFeatureFieldName = "wavelet";
+//	
+//	
+//	static public String lucenceSiftFeatureFieldName = "shape";
 	
-	static public String lucenceTagFilePathFieldName = "tagfilepaths";
+//	static public String lucenceTagFilePathFieldName = "tagfilepaths";
+//	
+//	static public String lucencePicFilePathFieldName = "picfilepaths";
 	
-	static public String lucencePicFilePathFieldName = "picfilepaths";
-	
-	static public String rawDataPath = "F:/apache-tomcat-6.0.16/webapps/PivotBrowser/data";
+	static public String rawDataPath = "./data";
 	
 	static public String image = "data";
 	
-	static public String synsetIndexDir = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/synsetindex";
+	static public String synsetIndexDir = "./synsetindex/";
 	
 	static public String mergeIndexDir = "./mergedir/";
 	
@@ -38,7 +44,7 @@ public class Constants {
 	
 	static public int numPerPage = 100;
 	
-	static public String dataInputName = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/dataInputObject";	
+	static public String dataInputName = "./dataInputObject";	
 	
 	static public int topK = 100;
 	

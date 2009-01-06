@@ -34,6 +34,7 @@ import com.thoughtworks.xstream.XStream;
 import DataIndex.DataInput;
 import DataIndex.IndexService;
 
+import model.NeteaseVedioData;
 import model.QueryExpension;
 import model.TagCluster;
 import model.TagModel;
@@ -151,7 +152,7 @@ public class SearchService {
      * 
      */
     public List<TagCluster> searchTag (List<String> rawList) throws Exception {
-        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,true,true,true, Constants.minFreqTime, Constants.topKForExpension);
+        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,false,true,true, Constants.minFreqTime, Constants.topKForExpension);
     }
     
     
@@ -161,9 +162,9 @@ public class SearchService {
      * 的方法
      * 
      */
-    private List<String> getSamplePicListForClusterRandom(List<String> tagList, List<QueryExpension> currentPivot) {
+    private List<NeteaseVedioData> getSamplePicListForClusterRandom(List<String> tagList, List<QueryExpension> currentPivot) {
         
-        List<String> picStringList = new ArrayList<String>();
+        List<NeteaseVedioData> picStringList = new ArrayList<NeteaseVedioData>();
         
         try {
             IndexSearcher searcher = new IndexSearcher(Constants.lucencePath);
@@ -190,9 +191,22 @@ public class SearchService {
                     break;
                 Hit hit = (Hit) it.next();              
                 Document doc = hit.getDocument();
-                Field field = doc.getField(Constants.lucencePicFilePathFieldName);
-                String picPath = field.stringValue(); 
-                picStringList.add(pathUrl + picPath);
+                NeteaseVedioData videoData = new NeteaseVedioData();
+                Field field = doc.getField(Constants.lucenceDescriptionFieldName);
+                videoData.setDescription(field.stringValue()); 
+                
+                field = doc.getField(Constants.lucenceTagFieldName);
+                videoData.setTags(field.stringValue());
+                
+                field = doc.getField(Constants.lucenceSnapshotFieldName);
+                videoData.setSnapshot(field.stringValue()); 
+                
+                field = doc.getField(Constants.lucenceTitleFieldName);
+                videoData.setTitle(field.stringValue()); 
+                
+                field = doc.getField(Constants.lucenceVideourlFieldName);
+                videoData.setVideourl(field.stringValue());
+                picStringList.add(videoData);
             }
             searcher.close();
         } catch (Exception e) {
@@ -261,7 +275,7 @@ public class SearchService {
                 for (TagModel tm : tagModelList) {
                     queryTagList.add(tm.getTagName());
                 }
-                List<String> picUrlList = getSamplePicListForClusterRandom(queryTagList,pivotTagList);
+                List<NeteaseVedioData> picUrlList = getSamplePicListForClusterRandom(queryTagList,pivotTagList);
                 tagCluster.setPicUrlList(picUrlList);       
                 
                 list.add(tagCluster);
@@ -295,14 +309,28 @@ public class SearchService {
      * 根据
      * List<WrapDocument> 生成urlList
      */
-    private List<String> getPicUrlForWrapDocumentList(List<WrapDocument> wrapDocList) {
-        List<String> list = new ArrayList<String>();
+    private List<NeteaseVedioData> getPicUrlForWrapDocumentList(List<WrapDocument> wrapDocList) {
+        List<NeteaseVedioData> list = new ArrayList<NeteaseVedioData>();
         
         for(WrapDocument wrapDoc : wrapDocList) {
             Document doc = wrapDoc.getDoc();
-            Field field = doc.getField(Constants.lucencePicFilePathFieldName);
-            String picPath = field.stringValue(); 
-            list.add(pathUrl + picPath);
+            NeteaseVedioData videoData = new NeteaseVedioData();
+            Field field = doc.getField(Constants.lucenceDescriptionFieldName);
+            videoData.setDescription(field.stringValue()); 
+            
+            field = doc.getField(Constants.lucenceTagFieldName);
+            videoData.setTags(field.stringValue());
+            
+            field = doc.getField(Constants.lucenceSnapshotFieldName);
+            videoData.setSnapshot(field.stringValue()); 
+            
+            field = doc.getField(Constants.lucenceTitleFieldName);
+            videoData.setTitle(field.stringValue()); 
+            
+            field = doc.getField(Constants.lucenceVideourlFieldName);
+            videoData.setVideourl(field.stringValue());
+            
+            list.add(videoData);
         }
 
         return list;
@@ -313,13 +341,13 @@ public class SearchService {
      * 随机排
      * 
      */
-    public List<String> getPicUrlForTagsRandom(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
+    public List<NeteaseVedioData> getPicUrlForTagsRandom(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
         List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
         long start = System.currentTimeMillis();
         wrapDocumentList = getWrapDocumentListForTagsRandom(tagList,currentPivot);
         long end = System.currentTimeMillis();
         averageTagRankTime += end - start; 
-        List<String> picUrlList = getPicUrlForWrapDocumentList(wrapDocumentList);
+        List<NeteaseVedioData> picUrlList = getPicUrlForWrapDocumentList(wrapDocumentList);
         return splitPage(picUrlList,page);
     }
     
@@ -329,13 +357,13 @@ public class SearchService {
      * 拿pic排序过后的url
      * 
      */
-    public List<String> getPicUrlForTagsRank(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
+    public List<NeteaseVedioData> getPicUrlForTagsRank(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
         List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
         long start = System.currentTimeMillis();
         wrapDocumentList = getWrapDocumentListForTagsRank(tagList,currentPivot);
         long end = System.currentTimeMillis();
         averageTagRankTime += end - start; 
-        List<String> picUrlList = getPicUrlForWrapDocumentList(wrapDocumentList);
+        List<NeteaseVedioData> picUrlList = getPicUrlForWrapDocumentList(wrapDocumentList);
         return splitPage(picUrlList,page);
     }
     
@@ -346,21 +374,21 @@ public class SearchService {
      * 拿pic排序过后的url
      * 
      */
-    public List<String> getPicUrlForColorRank(List<String> tagList, int page, String queryPicUrl) throws Exception {
-        //List<WrapDocument> wrapDocumentList = getWrapDocumentListForTagsRank(tagList);
-        String url = getRelativeUrl(queryPicUrl);
-        System.out.println(url + " page " + page);      
-        byte [] queryByteArray = getQueryByteArrayByUrl(url,FieldType.Color);
-        List<WrapDocument> subWrapDocList = getTopKWrapDocList();
-        long start = System.currentTimeMillis();
-        List<WrapDocument> list = rankWrapDocumentForColor(subWrapDocList, queryByteArray);
-        long end = System.currentTimeMillis();
-        averageColorRankTime += end - start;
-        List<String> picUrlList = getPicUrlForWrapDocumentList(list);
-        return splitPage(picUrlList,page);
-    }   
+//    public List<String> getPicUrlForColorRank(List<String> tagList, int page, String queryPicUrl) throws Exception {
+//        //List<WrapDocument> wrapDocumentList = getWrapDocumentListForTagsRank(tagList);
+//        String url = getRelativeUrl(queryPicUrl);
+//        System.out.println(url + " page " + page);      
+//        byte [] queryByteArray = getQueryByteArrayByUrl(url,FieldType.Color);
+//        List<WrapDocument> subWrapDocList = getTopKWrapDocList();
+//        long start = System.currentTimeMillis();
+//        List<WrapDocument> list = rankWrapDocumentForColor(subWrapDocList, queryByteArray);
+//        long end = System.currentTimeMillis();
+//        averageColorRankTime += end - start;
+//        List<String> picUrlList = getPicUrlForWrapDocumentList(list);
+//        return splitPage(picUrlList,page);
+//    }   
     
-    private List<String> splitPage(List<String> picUrlList, int page) {
+    private List<NeteaseVedioData> splitPage(List<NeteaseVedioData> picUrlList, int page) {
         int size = picUrlList.size();       
         int start = page*Constants.numPerPage;
         int end = (page+1)*Constants.numPerPage;
@@ -383,25 +411,25 @@ public class SearchService {
         return queryPicUrl.substring(position);
     }
     
-    /*
-     * 根据tagList
-     * 先用tag排 取 topkForTagRank个
-     * 然后用waveLet排
-     * 拿pic排序过后的url
-     * 
-     */
-    public List<String> getPicUrlForWaveLetRank(List<String> tagList, int page, String queryPicUrl) throws Exception {
-        //List<WrapDocument> wrapDocumentList = getWrapDocumentListForTagsRank(tagList);
-        String url = getRelativeUrl(queryPicUrl);
-        byte [] queryByteArray = getQueryByteArrayByUrl(url,FieldType.WaveLet); 
-        List<WrapDocument> subWrapDocList = getTopKWrapDocList();       
-        long start = System.currentTimeMillis();
-        List<WrapDocument> list = rankWrapDocumentForWaveLet(subWrapDocList,queryByteArray);
-        long end = System.currentTimeMillis();
-        averageWaveLetRankTime += end - start;
-        List<String> picUrlList = getPicUrlForWrapDocumentList(list);
-        return splitPage(picUrlList,page);
-    }
+//    /*
+//     * 根据tagList
+//     * 先用tag排 取 topkForTagRank个
+//     * 然后用waveLet排
+//     * 拿pic排序过后的url
+//     * 
+//     */
+//    public List<String> getPicUrlForWaveLetRank(List<String> tagList, int page, String queryPicUrl) throws Exception {
+//        //List<WrapDocument> wrapDocumentList = getWrapDocumentListForTagsRank(tagList);
+//        String url = getRelativeUrl(queryPicUrl);
+//        byte [] queryByteArray = getQueryByteArrayByUrl(url,FieldType.WaveLet); 
+//        List<WrapDocument> subWrapDocList = getTopKWrapDocList();       
+//        long start = System.currentTimeMillis();
+//        List<WrapDocument> list = rankWrapDocumentForWaveLet(subWrapDocList,queryByteArray);
+//        long end = System.currentTimeMillis();
+//        averageWaveLetRankTime += end - start;
+//        List<String> picUrlList = getPicUrlForWrapDocumentList(list);
+//        return splitPage(picUrlList,page);
+//    }
     
     private List<WrapDocument> getTopKWrapDocList() {
         //分情况
@@ -411,62 +439,62 @@ public class SearchService {
             return wrapDocumentList.subList(0, Constants.topKForTagRank);
     }
     
-    /*
-     * 根据查询的picurl String 
-     * 以及rank type
-     * 拿到该query的 byte []
-     * 
-     */
-    private byte [] getQueryByteArrayByUrl(String queryPicUrl,FieldType type) throws Exception  {
-        IndexSearcher searcher = new IndexSearcher(Constants.lucencePath);      
-        Term t = new Term(Constants.lucencePicFilePathFieldName,queryPicUrl);
-        TermQuery query = new TermQuery(t);
-        Hits hits = searcher.search(query);
-        return getByteFromLucenceIndex(hits.doc(0),type);
-    }
+//    /*
+//     * 根据查询的picurl String 
+//     * 以及rank type
+//     * 拿到该query的 byte []
+//     * 
+//     */
+//    private byte [] getQueryByteArrayByUrl(String queryPicUrl,FieldType type) throws Exception  {
+//        IndexSearcher searcher = new IndexSearcher(Constants.lucencePath);      
+//        Term t = new Term(Constants.lucencePicFilePathFieldName,queryPicUrl);
+//        TermQuery query = new TermQuery(t);
+//        Hits hits = searcher.search(query);
+//        return getByteFromLucenceIndex(hits.doc(0),type);
+//    }
     
     
-    /*
-     * 
-     * 根据与查询点的
-     * color的距离来排序
-     * 
-     */
-    private  List<WrapDocument> rankWrapDocumentForColor(List<WrapDocument> wrapDocumentList,byte [] queryByteArray) throws Exception {
-        
-        //计算颜色距离
-        for(WrapDocument wrapDoc : wrapDocumentList) {
-            byte [] byteArray = getByteFromLucenceIndex(wrapDoc.getDoc(),FieldType.Color);
-            double dist = distFunction(queryByteArray,byteArray);
-            double colorScore = dist;
-            wrapDoc.setColorScore(colorScore);
-        }
-        
-        Collections.sort(wrapDocumentList,new ColorComparator());
-        
-        return wrapDocumentList;
-    }
-    
-    /*
-     * 
-     * 根据与查询点的
-     * waveLet的距离来排序
-     * 
-     */
-    private  List<WrapDocument> rankWrapDocumentForWaveLet(List<WrapDocument> wrapDocumentList,byte [] queryByteArray) throws Exception {
-                
-        //计算wavelet距离
-        for(WrapDocument wrapDoc : wrapDocumentList) {
-            byte [] byteArray = getByteFromLucenceIndex(wrapDoc.getDoc(),FieldType.WaveLet);
-            double dist = distFunction(queryByteArray,byteArray);
-            double waveLetScore = dist;
-            wrapDoc.setWaveLetScore(waveLetScore);
-        }
-        
-        Collections.sort(wrapDocumentList,new WaveLetComparator());
-        
-        return wrapDocumentList;
-    }
+//    /*
+//     * 
+//     * 根据与查询点的
+//     * color的距离来排序
+//     * 
+//     */
+//    private  List<WrapDocument> rankWrapDocumentForColor(List<WrapDocument> wrapDocumentList,byte [] queryByteArray) throws Exception {
+//        
+//        //计算颜色距离
+//        for(WrapDocument wrapDoc : wrapDocumentList) {
+//            byte [] byteArray = getByteFromLucenceIndex(wrapDoc.getDoc(),FieldType.Color);
+//            double dist = distFunction(queryByteArray,byteArray);
+//            double colorScore = dist;
+//            wrapDoc.setColorScore(colorScore);
+//        }
+//        
+//        Collections.sort(wrapDocumentList,new ColorComparator());
+//        
+//        return wrapDocumentList;
+//    }
+//    
+//    /*
+//     * 
+//     * 根据与查询点的
+//     * waveLet的距离来排序
+//     * 
+//     */
+//    private  List<WrapDocument> rankWrapDocumentForWaveLet(List<WrapDocument> wrapDocumentList,byte [] queryByteArray) throws Exception {
+//                
+//        //计算wavelet距离
+//        for(WrapDocument wrapDoc : wrapDocumentList) {
+//            byte [] byteArray = getByteFromLucenceIndex(wrapDoc.getDoc(),FieldType.WaveLet);
+//            double dist = distFunction(queryByteArray,byteArray);
+//            double waveLetScore = dist;
+//            wrapDoc.setWaveLetScore(waveLetScore);
+//        }
+//        
+//        Collections.sort(wrapDocumentList,new WaveLetComparator());
+//        
+//        return wrapDocumentList;
+//    }
     
     /*
      * 
@@ -684,23 +712,23 @@ public class SearchService {
         
     }
     
-    /*
-     * 从doc中把byte拿出来
-     * 
-     * 
-     */
-    private byte [] getByteFromLucenceIndex(Document doc, FieldType type) {
-        Field field = null;
-        switch(type) {
-        case Color:
-            field = doc.getField(Constants.lucenceColorFeatureFieldName);
-            break;
-        case WaveLet:
-            field = doc.getField(Constants.lucenceWaveLetFeatureFieldName);
-            break;
-        }
-        return field.binaryValue();
-    }
+//    /*
+//     * 从doc中把byte拿出来
+//     * 
+//     * 
+//     */
+//    private byte [] getByteFromLucenceIndex(Document doc, FieldType type) {
+//        Field field = null;
+//        switch(type) {
+//        case Color:
+//            field = doc.getField(Constants.lucenceColorFeatureFieldName);
+//            break;
+//        case WaveLet:
+//            field = doc.getField(Constants.lucenceWaveLetFeatureFieldName);
+//            break;
+//        }
+//        return field.binaryValue();
+//    }
     
     /*
      * 计算颜色距离函数
@@ -796,8 +824,8 @@ public class SearchService {
         int i = 0;
         for (int n = 0; n < 1; n++) {
             List<String> list = new ArrayList<String>();
-            list.add("sexta");
-            list.add("bluedoor");
+            list.add("西安");
+//          list.add("bluedoor");
 //          list.add("window");
 //          list.add("baby");
 //          list.add("movie");
@@ -828,16 +856,16 @@ public class SearchService {
                     for (TagModel tm : list1) {
                         queryTagList.add(tm.getTagName());
                     }
-                    List<String> picUrlList = searchService
+                    List<NeteaseVedioData> picUrlList = searchService
                             .getPicUrlForTagsRank(queryTagList, rawList, 0);
                     //print
                     XStream xstream = new XStream();
                     String result = xstream.toXML(picUrlList);
                     
                     System.out.println(result);
-                    
-                    picUrlList = searchService.getPicUrlForColorRank(queryTagList, 0, "/data/293/175681613.jpg");
-                    picUrlList = searchService.getPicUrlForWaveLetRank(queryTagList, 0, "/data/186/144644760.jpg");
+//                    
+//                    picUrlList = searchService.getPicUrlForColorRank(queryTagList, 0, "/data/293/175681613.jpg");
+//                    picUrlList = searchService.getPicUrlForWaveLetRank(queryTagList, 0, "/data/186/144644760.jpg");
                     i++;
                 }
             }

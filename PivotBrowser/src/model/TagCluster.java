@@ -17,13 +17,15 @@ public class TagCluster implements Comparable<TagCluster> {
 	
 	//该cluster内部的pic url
 	
-	private List<String> picUrlList;
+	private List<NeteaseVedioData> picUrlList;
 
-	public List<String> getPicUrlList() {
+
+
+	public List<NeteaseVedioData> getPicUrlList() {
 		return picUrlList;
 	}
 
-	public void setPicUrlList(List<String> picUrlList) {
+	public void setPicUrlList(List<NeteaseVedioData> picUrlList) {
 		this.picUrlList = picUrlList;
 	}
 

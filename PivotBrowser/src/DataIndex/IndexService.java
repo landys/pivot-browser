@@ -207,10 +207,12 @@ public class IndexService implements Serializable{
 		//System.out.println("[" + startRow + "," + endRow + ")");
 		
 		IndexService indexService = new IndexService();
-		
-		System.out.println(indexService.getDataInput().getTotalTagNum());
-		
-		System.out.println("e");
+//		Long row = indexService.getDataInput().getTagIndex().get("zzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+//		DoubleMatrix1D vector = indexService.getDataInput().getCoMatrixOneRow(row.intValue());
+//		System.out.println(vector);
+//		System.out.println(indexService.getDataInput().getTotalTagNum());
+//		
+//		System.out.println("e");
 		//MergeDataInput();
 		
 		//distributedDataInput();
