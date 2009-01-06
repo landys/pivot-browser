@@ -151,7 +151,7 @@ public class SearchService {
      * 
      */
     public List<TagCluster> searchTag (List<String> rawList) throws Exception {
-        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,true,true,true, Constants.minFreqTime, Constants.topKForExpension);
+        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,false,true,true, Constants.minFreqTime, Constants.topKForExpension);
     }
     
     
@@ -796,8 +796,8 @@ public class SearchService {
         int i = 0;
         for (int n = 0; n < 1; n++) {
             List<String> list = new ArrayList<String>();
-            list.add("sexta");
-            list.add("bluedoor");
+            list.add("ÖÐ¹ú");
+//          list.add("bluedoor");
 //          list.add("window");
 //          list.add("baby");
 //          list.add("movie");
@@ -835,9 +835,9 @@ public class SearchService {
                     String result = xstream.toXML(picUrlList);
                     
                     System.out.println(result);
-                    
-                    picUrlList = searchService.getPicUrlForColorRank(queryTagList, 0, "/data/293/175681613.jpg");
-                    picUrlList = searchService.getPicUrlForWaveLetRank(queryTagList, 0, "/data/186/144644760.jpg");
+//                    
+//                    picUrlList = searchService.getPicUrlForColorRank(queryTagList, 0, "/data/293/175681613.jpg");
+//                    picUrlList = searchService.getPicUrlForWaveLetRank(queryTagList, 0, "/data/186/144644760.jpg");
                     i++;
                 }
             }

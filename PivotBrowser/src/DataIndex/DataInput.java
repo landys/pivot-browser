@@ -29,6 +29,7 @@ import model.TagModel;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -113,40 +114,59 @@ public class DataInput implements Serializable {
 	}
 
 	/*
-	 * 用分布式的处理方法来处理
-	 * 代替原来的getQuick函数
+	 * 集中式环境下的函数
+	 * 
 	 */
 	public double getCoMatrixValue(int row, int col) {
-		//对每个进行遍历,看是否存在于该sub的范围
-		for(int i = 0; i < subDataInputList.size(); i++) {
-			DataInput subDataInput = subDataInputList.get(i);
-			int startRow = subDataInput.getStartRow();
-			int endRow = subDataInput.getEndRow();
-			if(row >= startRow && row < endRow) { //在这个之间
-				return subDataInput.getSubCoMatrix().getQuick(row - startRow, col);
-			}
-		}
-		return 0;  //默认值
+		return coMatrix.getQuick(row, col);
 	}
 	
+//	/*
+//	 * 用分布式的处理方法来处理
+//	 * 代替原来的getQuick函数
+//	 */
+//	public double getCoMatrixValue(int row, int col) {
+//		//对每个进行遍历,看是否存在于该sub的范围
+//		for(int i = 0; i < subDataInputList.size(); i++) {
+//			DataInput subDataInput = subDataInputList.get(i);
+//			int startRow = subDataInput.getStartRow();
+//			int endRow = subDataInput.getEndRow();
+//			if(row >= startRow && row < endRow) { //在这个之间
+//				return subDataInput.getSubCoMatrix().getQuick(row - startRow, col);
+//			}
+//		}
+//		return 0;  //默认值
+//	}
+//	
+	
 	/*
-	 * 用分布式的处理方法
-	 * 取得CoMatrix里面
-	 * 对应某个词的一个行
+	 * 集中式环境下对应的函数
 	 * 
 	 */
 	public DoubleMatrix1D getCoMatrixOneRow(int row) {
-		//对每个进行遍历,看是否存在于该sub的范围
-		for(int i = 0; i < subDataInputList.size(); i++) {
-			DataInput subDataInput = subDataInputList.get(i);
-			int startRow = subDataInput.getStartRow();
-			int endRow = subDataInput.getEndRow();
-			if(row >= startRow && row < endRow) { //在这个之间
-				return subDataInput.getSubCoMatrix().viewRow(row - startRow);
-			}
-		}
-		return null;
+		return coMatrix.viewRow(row);
 	}
+	
+	
+//	/*
+//	 * 用分布式的处理方法
+//	 * 取得CoMatrix里面
+//	 * 对应某个词的一个行
+//	 * 
+//	 */
+//	public DoubleMatrix1D getCoMatrixOneRow(int row) {
+//		//对每个进行遍历,看是否存在于该sub的范围
+//		for(int i = 0; i < subDataInputList.size(); i++) {
+//			DataInput subDataInput = subDataInputList.get(i);
+//			int startRow = subDataInput.getStartRow();
+//			int endRow = subDataInput.getEndRow();			
+//			if((row >= startRow && row < endRow)) { //在这个之间
+//				return subDataInput.getSubCoMatrix().viewRow(row - startRow);
+//			}
+//			
+//		}
+//		return null;
+//	}
 	
 	public int getCoMatrixSize() {
 		return coMatrixSize;
@@ -170,8 +190,9 @@ public class DataInput implements Serializable {
 
 	public void createTagsTimeFile() throws Exception {
 		BufferedWriter wt = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(Constants.tagTimesFileName)));
-		for(TagModel tm : tagCloud) {
-			String tag = tm.getTagName();
+		for(TagModel tm : tagCloud) {			
+			//只处理中文情况			
+			String tag = tm.getTagName();			
 			int time = tm.getTimes();
 			wt.write(tag + " " + time + "\n");
 		}
@@ -237,8 +258,9 @@ public class DataInput implements Serializable {
 				fileList.addAll(Arrays.asList(txtFileArray));
 			}
 		}
-		StandardAnalyzer standardAnalyzer = new StandardAnalyzer();
-		IndexWriter writer = new IndexWriter(Constants.lucencePath,standardAnalyzer,true);
+		//StandardAnalyzer standardAnalyzer = new StandardAnalyzer();
+		WhitespaceAnalyzer whiteSpaceAnalyzer = new WhitespaceAnalyzer(); 
+		IndexWriter writer = new IndexWriter(Constants.lucencePath,whiteSpaceAnalyzer,true);
 		writer.setUseCompoundFile(false);
 		
 		//整个文档的数目
@@ -254,7 +276,7 @@ public class DataInput implements Serializable {
 		for(File file : fileList) {				
 			b1.clear();
 			b2.clear();					
-			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+			BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file),"UTF-8"));
 			StringBuilder tags = new StringBuilder(300);
 			
 			//这里假设tag文件都有内容了
@@ -264,10 +286,16 @@ public class DataInput implements Serializable {
 				if (tag == null) {
 					break;
 				}
-				if(tag.getBytes().length == tag.length()) { //判定是否为非ascil字符
-					tags.append(tag + "\n");
-				} else
-					continue;
+				
+				tags.append(tag + "\n");
+				
+				//只处理 中文字符
+//				if(tag.getBytes().length != tag.length()) { //判定是否为非ascil字符
+//					tags.append(tag + "\n");
+//				} else
+//					continue;
+				
+				
 			}			
 			//关闭文件
 			br.close();
@@ -287,39 +315,40 @@ public class DataInput implements Serializable {
 		    String lastName = file.getName().replace(".txt", ".jpg");
 		    picPath.append(file.getParentFile().getName() + "/" + lastName);
 		    
-		    String picAbsolutePath = file.getAbsolutePath().replace(".txt", ".jpg");   
+//		    String picAbsolutePath = file.getAbsolutePath().replace(".txt", ".jpg");   
 		    //检测
-		    File f1 = new File(picAbsolutePath);
-		    if(!f1.exists()||f1.length() <= 0) {
-		    	continue;  //下一个文件
-		    }
+//		    File f1 = new File(picAbsolutePath);
+//		    if(!f1.exists()||f1.length() <= 0) {
+//		    	continue;  //下一个文件
+//		    }
 		    
 		    String path = picPath.toString();
 		    doc.add( new Field(Constants.lucencePicFilePathFieldName, path ,Field.Store.YES,Field.Index.UN_TOKENIZED));	
 		    
-		    //color feature
-		    String colorFeaturePath = file.getAbsolutePath().replace(".txt", ".color");
-		    
-		    //检测
-		    File f2 = new File(colorFeaturePath);
-		    if(!f2.exists()) {
-		    	continue;
-		    }
-		    
-		    readColorFile(colorFeaturePath,b1);		    
-		    doc.add(new Field(Constants.lucenceColorFeatureFieldName,b1.array(),Field.Store.YES));
-		    
-		    //wavelet feature
-		    String waveLetFeaturePath = file.getAbsolutePath().replace(".txt", ".texture");
-		    
-		    //检测
-		    File f3 = new File(waveLetFeaturePath);
-		    if(!f3.exists()) {
-		    	continue;
-		    }
-		    
-		    readWaveLetFile(waveLetFeaturePath,b2);		    
-		    doc.add(new Field(Constants.lucenceWaveLetFeatureFieldName,b2.array(),Field.Store.YES));
+		    //不需要视觉特征
+//		    //color feature
+//		    String colorFeaturePath = file.getAbsolutePath().replace(".txt", ".color");
+//		    
+//		    //检测
+//		    File f2 = new File(colorFeaturePath);
+//		    if(!f2.exists()) {
+//		    	continue;
+//		    }
+//		    
+//		    readColorFile(colorFeaturePath,b1);		    
+//		    doc.add(new Field(Constants.lucenceColorFeatureFieldName,b1.array(),Field.Store.YES));
+//		    
+//		    //wavelet feature
+//		    String waveLetFeaturePath = file.getAbsolutePath().replace(".txt", ".texture");
+//		    
+//		    //检测
+//		    File f3 = new File(waveLetFeaturePath);
+//		    if(!f3.exists()) {
+//		    	continue;
+//		    }
+//		    
+//		    readWaveLetFile(waveLetFeaturePath,b2);		    
+//		    doc.add(new Field(Constants.lucenceWaveLetFeatureFieldName,b2.array(),Field.Store.YES));
 		    
 		    writer.addDocument(doc);
 			i++;
@@ -583,7 +612,7 @@ public class DataInput implements Serializable {
 	 */
 	public void init() throws Exception, IOException {
 		//该函数已经被修改成static 在 DataInput构造前执行
-		//createLuceneIndex();	
+		createLuceneIndex();	
 		this.totalDoc = getTotalDocsNum();
 		System.out.println("total docs: " + totalDoc);
 		System.out.println("create tagCloud start");
@@ -697,7 +726,7 @@ public class DataInput implements Serializable {
         		Hit hit = (Hit)it.next();
         		Document doc = hit.getDocument();
         		Field field = doc.getField(Constants.lucenceTagFieldName);
-        		Analyzer aAnalyzer = new StandardAnalyzer();
+        		Analyzer aAnalyzer = new WhitespaceAnalyzer();
         		String str = field.stringValue();        		
         		StringReader sr = new StringReader(str);
         		TokenStream tokenStream = aAnalyzer.tokenStream(Constants.lucenceTagFieldName,sr);

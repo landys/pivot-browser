@@ -172,7 +172,54 @@ public final class KMeans {
      */
     public PointND[] getCenters(double maxDeltaAllowed, int maxIterations) {
         // allocate random cluster centers in the bounding hyper-cube
-        double[] min = new double[this.sampleDimensionality];
+        PointND[] startingCenters = initialClusterCenters();
+
+        this.currCenters = startingCenters;
+        int itCount = 0;
+        while (itCount < maxIterations) {
+            long startTime = System.currentTimeMillis();
+            double delta = this.singleIteration();
+            if (delta < maxDeltaAllowed) {
+                break;
+            }
+            long endTime = System.currentTimeMillis();
+            System.out.println("iteration " + itCount + ", time " +
+                    (endTime - startTime) +
+                    ", delta " + delta);
+            itCount++;
+        }
+
+        return this.currCenters;
+    }
+    
+    /*
+     * 指定中心点
+     * PointND[] startingCenters
+     * 
+     */
+    public PointND[] getCenters(double maxDeltaAllowed, int maxIterations,PointND[] startingCenters) {
+
+        this.currCenters = startingCenters;
+        int itCount = 0;
+        while (itCount < maxIterations) {
+            long startTime = System.currentTimeMillis();
+            double delta = this.singleIteration();
+            if (delta < maxDeltaAllowed) {
+                break;
+            }
+            long endTime = System.currentTimeMillis();
+            System.out.println("iteration " + itCount + ", time " +
+                    (endTime - startTime) +
+                    ", delta " + delta);
+            itCount++;
+        }
+
+        return this.currCenters;
+    }
+
+
+	private PointND[] initialClusterCenters() {
+		double[] min = new double[this.sampleDimensionality];
         double[] max = new double[this.sampleDimensionality];
         for (int i = 0; i < this.sampleDimensionality; i++) {
             min[i] = Double.MAX_VALUE;
@@ -200,24 +247,8 @@ public final class KMeans {
             }
             startingCenters[cent] = new PointND(coords);
         }
-
-        this.currCenters = startingCenters;
-        int itCount = 0;
-        while (itCount < maxIterations) {
-            long startTime = System.currentTimeMillis();
-            double delta = this.singleIteration();
-            if (delta < maxDeltaAllowed) {
-                break;
-            }
-            long endTime = System.currentTimeMillis();
-            System.out.println("iteration " + itCount + ", time " +
-                    (endTime - startTime) +
-                    ", delta " + delta);
-            itCount++;
-        }
-
-        return this.currCenters;
-    }
+		return startingCenters;
+	}
 
     /**
      * Return the index of the center that is closest to a given input point
