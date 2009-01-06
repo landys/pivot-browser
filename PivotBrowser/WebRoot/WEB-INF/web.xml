@@ -79,6 +79,13 @@
         </init-param>
         <load-on-startup>10</load-on-startup>
     </servlet>
+  <servlet>
+    <description>This is the description of my J2EE component</description>
+    <display-name>This is the display name of my J2EE component</display-name>
+    <servlet-name>MediaProxyServlet</servlet-name>
+    <servlet-class>pb.servlet.MediaProxyServlet</servlet-class>
+  </servlet>
+
 
     <servlet-mapping>
         <servlet-name>MessageBrokerServlet</servlet-name>
@@ -109,6 +116,10 @@
         <servlet-name>FlexInternalServlet</servlet-name>
         <url-pattern>/flex-internal/*</url-pattern>
     </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>MediaProxyServlet</servlet-name>
+    <url-pattern>/MediaProxy/*</url-pattern>
+  </servlet-mapping>
 
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
