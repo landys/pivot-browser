@@ -147,6 +147,9 @@
 			// the count of processing remote call, for enable or disable the application
 			private var remoteCallCount:int = 0;
 			
+			// the number of pictures displayed in the screen.
+			private var maxPicsPerDisplay:int = 40;
+			
 			private function initApp():void
 			{
 				//Security.loadPolicyFile("http://192.168.80.158:8080/PivotBrowser/crossdomain.xml");
@@ -380,31 +383,11 @@
 				
 				if (tagsSearched.length > 0)
 				{
-					// assign arguments of searchTag interface
-					topKInSelectTag = (int)(txtTopKInSelectTag.text);
-					if (topKInSelectTag == 0)
-					{
-						topKInSelectTag = 100;
-					}
 					maxClusterNum = (int)(txtMaxClusterNum.text);
 					if (maxClusterNum == 0)
 					{
 						maxClusterNum = 20;
 					}
-					isExpansion = chkIsExpansion.selected;
-					isCluster = chkIsCluster.selected;
-					isExpansionWithCoMap = chkIsExpansionWithCoMap.selected;
-					minFreqTime = (int)(txtMinFreqTime.text);
-					if (minFreqTime == 0)
-					{
-						minFreqTime = 20;
-					}
-					topKForExpension = (int)(txtTopKForExpension.text);
-					if (topKForExpension == 0)
-					{
-						topKForExpension = 5;
-					}
-					
 					navPrevClus.visible = false;
 					navNextClus.visible = false;
 					setAllClustersNotVisible();
@@ -509,7 +492,7 @@
 					}
 				}
 				
-				for (i=0; i<a.length; i++)
+				for (i=0; i<a.length && i<maxPicsPerDisplay; i++)
 				{	
 					photos.addItem(new PhotoVo(String(a.getItemAt(i)), toolTip));
 				}
@@ -929,8 +912,6 @@
 	<mx:RemoteObject id="searchRO" destination="dataQuery_SearchService"
 		fault="faultHandler(event)" showBusyCursor="true"/>
 
-	<mx:NumberValidator id="vldTopK" source="{txtTopKInSelectTag}" property="text"/>
-
 	<mx:VBox width="100%" height="100%" styleName="colorPanel">
 		<!-- search input area -->
 		<mx:HBox width="100%" height="248">
@@ -961,21 +942,12 @@
 			<mx:VBox width="850" height="100%">
 				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
-					<mx:Label text="Tags:" y="2" styleName="label" x="6"/>
-					<mx:TextInput id="inputTag" width="121" x="47" toolTip="Input tags for search"/>
-					<mx:Label text="TopK:" x="168" styleName="label" y="2"/>
-					<mx:TextInput id="txtTopKInSelectTag" text="{topKInSelectTag}" toolTip="topKInSelectTag" x="207" width="33"  y="1"/>
-					<mx:Label text="Cluster:" x="240" styleName="label" y="2"/>
-					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="292" width="33" />
-					<mx:Label text="MinFreq:" x="324" styleName="label" y="1"/>
-					<mx:TextInput id="txtMinFreqTime" text="{minFreqTime}" toolTip="minFreqTime" x="383" width="34"  y="0"/>
-					<mx:Label text="TopKExp:" x="418" styleName="label" y="2"/>
-					<mx:TextInput id="txtTopKForExpension" text="{topKForExpension}" toolTip="topKForExpension" x="481" width="33" />
-					<mx:CheckBox id="chkIsExpansion" selected="{isExpansion}" label="Expansion" toolTip="isExpansion" x="521" width="86" y="3" buttonMode="true" useHandCursor="true"/>
-					<mx:CheckBox id="chkIsCluster" selected="{isCluster}" label="Cluster" toolTip="isCluster" x="604" width="66" y="3" buttonMode="true" useHandCursor="true"/>
-					<mx:CheckBox id="chkIsExpansionWithCoMap" selected="{isExpansionWithCoMap}" label="CoMap" toolTip="isExpansionWithCoMap" x="671" width="65" y="3" buttonMode="true" useHandCursor="true"/>
-					<mx:Button label="Search" x="736" width="50" click="onSearchClick();" buttonMode="true" useHandCursor="true"/>
-					<mx:Button label="Restart" x="791" width="55" click="onRestartClick();" buttonMode="true" useHandCursor="true"/>
+					<mx:Label text="Input Tags:" y="1" styleName="label" x="5" width="99"/>
+					<mx:TextInput id="inputTag" width="297" x="98" toolTip="Input tags for search"/>
+					<mx:Label text="Max Clusters:" x="408" styleName="label" y="1"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="508" width="52" />
+					<mx:Button label="Search" x="585" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
+					<mx:Button label="Restart" x="677" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -1013,9 +985,9 @@
 					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 						
-					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" fontSize="12" color="#000080"/>
-					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="20" height="22" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true"/>
-					<mx:Button icon="{ICON_REDO}" x="61" y="10" width="22" height="22"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
+					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" styleName="label" color="#000080"/>
+					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="49" height="49" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true"/>
+					<mx:Button icon="{ICON_REDO}" x="95" y="10" width="49" height="49"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
