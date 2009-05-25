@@ -1019,7 +1019,8 @@
 			<hisa:TagCluster id="clsWhole" index="{WHOLE_CLUSTER_INDEX}"
 					visible="true" hasPics="true"
 					clusterClick="leftClusterClickHandler(event)"
-					width="236" height="100%" styleName="clusterCanvasWhole" />
+					width="236" height="100%" styleName="clusterCanvasWhole" 
+					maxItemWidth="216"/>
 			<hisa:NavButton source="{ICON_LEFT}"
 				id="navPrevPic"
 				toolTip="Previous Page"
