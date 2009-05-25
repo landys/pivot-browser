@@ -4,6 +4,7 @@
 	creationComplete="initApp()">
 	<mx:Script>
 		<![CDATA[
+			import hisa.vo.SearchHistoryVo;
 			import mx.utils.StringUtil;
 			import hisa.vo.PhotoVo;
 			import hisa.event.ClusterClickEvent;
@@ -58,6 +59,20 @@
 			
 			// get at most number of clusters for initial search.
 			private const TAGS_PER_CLUSTERS:int = 2;
+			
+			// search histories for backward/forward
+			// [ArrayElementType("SearchHistoryVo")], comment for no use
+			// ArrayElementType only used in Array.
+			private var searchHistories:ArrayCollection = new ArrayCollection();
+			
+			// current backward/foreward state index in "searchHistories" 
+			private var stateIndex:int = -1;
+			
+			[Bindable]
+			private var undoEnabled:Boolean = false;
+			
+			[Bindable]
+			private var redoEnabled:Boolean = false;
 			
 			// shape of all clusters
 			private const VISIBLE_CLUSTERS_SHAPE:ArrayCollection = new ArrayCollection(
@@ -171,6 +186,9 @@
 				searchRO.getPivotNumPic.addEventListener("result", getPivotNumPicHandler);
 				searchRO.getPivotNumPic.addEventListener("fault", faultHandler);
 				
+				// reinit histories first.
+				reInitHistories();
+				
 				// create effects
 				parShowAll = new Parallel();
 				
@@ -233,7 +251,7 @@
 			}
 			
 			// intialize into beginning to search.
-			private function gameStart():void
+			private function gameStart(doAgain:Boolean=false):void
 			{
 				setAllClustersNotVisible();
 				// init cluster center				
@@ -268,6 +286,142 @@
 				
 				searchRO.getTagCloud(20);
 				disableApplication();
+				
+				// for backward/foreward
+				if (!doAgain)
+				{					
+					addHistory(new SearchHistoryVo(null, 0));
+				}
+			}
+			
+			// for backward/foreward
+			private function addHistory(vo:SearchHistoryVo):void 
+			{
+				// check repeat
+				if (vo == null || (stateIndex >= 0 && stateIndex < searchHistories.length 
+					&& searchHistories.getItemAt(stateIndex).equals(vo)))
+				{
+					return;
+				}
+			
+				for (var i:int=stateIndex+1; i<searchHistories.length; ++i)
+				{
+					searchHistories.removeItemAt(i);
+				}
+				
+				searchHistories.addItem(vo);
+				
+				if (++stateIndex > 0)
+				{
+					setUndoEnable(true);
+				}
+				setRedoEnable(false);
+			}
+			
+			private function btnUndoClick():void
+			{
+				if (stateIndex < 0 || stateIndex >= searchHistories.length)
+				{
+					reInitHistories();
+					return;
+				}
+				
+				if (stateIndex > 0)
+				{
+					var vo:SearchHistoryVo = SearchHistoryVo(searchHistories.getItemAt(--stateIndex));
+					if (vo.tags == null || vo.tags.length == 0)
+					{
+						// true for not record the search in histories again
+						gameStart(true);
+					}
+					else
+					{
+						tagsSearched.removeAll();
+						for (var i:int=0; i<vo.tags.length; ++i)
+						{
+							tagsSearched.addItem(vo.tags.getItemAt(i));
+						}
+						maxClusterNum = vo.maxClusterNum;
+						// true for not record the search in histories again
+						doFetchClusters(true);
+					}
+					
+					if (stateIndex == 0)
+					{
+						setUndoEnable(false);
+					}
+					setRedoEnable(true);
+				}
+			}
+			
+			private function setUndoEnable(enabled:Boolean):void
+			{
+				undoEnabled = enabled;
+				if (enabled)
+				{
+					btnUndo.alpha = 1;
+				}
+				else
+				{
+					btnUndo.alpha = 0.4;
+				}
+			}
+			
+			private function setRedoEnable(enabled:Boolean):void
+			{
+				redoEnabled = enabled;
+				if (enabled)
+				{
+					btnRedo.alpha = 1;
+				}
+				else
+				{
+					btnRedo.alpha = 0.4;
+				}
+			}
+			
+			private function btnRedoClick():void
+			{
+				if (stateIndex < 0 || stateIndex >= searchHistories.length)
+				{
+					reInitHistories();
+					return;
+				}
+				
+				if (stateIndex < searchHistories.length - 1)
+				{
+					var vo:SearchHistoryVo = SearchHistoryVo(searchHistories.getItemAt(++stateIndex));
+					if (vo.tags == null || vo.tags.length == 0)
+					{
+						// true for not record the search in histories again
+						gameStart(true);
+					}
+					else
+					{
+						tagsSearched.removeAll();
+						for (var i:int=0; i<vo.tags.length; ++i)
+						{
+							tagsSearched.addItem(vo.tags.getItemAt(i));
+						}
+						maxClusterNum = vo.maxClusterNum;
+						// true for not record the search in histories again
+						doFetchClusters(true);
+					}
+					
+					if (stateIndex == searchHistories.length - 1)
+					{
+						setRedoEnable(false);
+					}
+					setUndoEnable(true);
+				}
+			}
+			
+			private function reInitHistories():void
+			{
+				setUndoEnable(false);
+				setRedoEnable(false);
+				searchHistories.removeAll();
+				stateIndex = -1;
 			}
 			
 			private function disableApplication():void
@@ -349,6 +503,7 @@
             
 
 			// update the searched tag collection, and then do fetch clusters.
+			// index not used in current implementation.
 			private function fetchClusters(tags:Array, index:int):void
 			{	
 				for (var i:int=0; i<tags.length; i++)
@@ -365,7 +520,7 @@
 				}
 			}
 			
-			private function doFetchClusters():void
+			private function doFetchClusters(doAgain:Boolean=false):void
 			{
 				setAllClustersNotVisible();
 				
@@ -396,6 +551,12 @@
 					setAllClustersNotVisible();
 					searchRO.searchTag(tagsSearched, topKInSelectTag, maxClusterNum, isExpansion, isExpansionWithCoMap, isCluster, minFreqTime, topKForExpension);
 					disableApplication();
+					
+					// for backward/foreward
+					if (!doAgain)
+					{
+						addHistory(new SearchHistoryVo(tagsSearched, maxClusterNum));
+					}
 				}
 			}
          
@@ -963,8 +1124,13 @@
 			<mx:VBox width="850" height="100%">
 				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
-					<mx:Button icon="{ICON_UNDO}" x="5" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true" height="22" width="22"/>
-					<mx:Button icon="{ICON_REDO}" x="36" paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true" width="22" height="22"/>
+					<mx:Button id="btnUndo" icon="{ICON_UNDO}" x="5" paddingLeft="0" toolTip="Undo" 
+						buttonMode="{undoEnabled}" useHandCursor="{undoEnabled}" includeInLayout="true" 
+						height="22" width="22" enabled="{undoEnabled}"
+						click="btnUndoClick()"/>
+					<mx:Button id="btnRedo" icon="{ICON_REDO}" x="36" paddingLeft="0" toolTip="Redo" 
+						buttonMode="{redoEnabled}" useHandCursor="{redoEnabled}" width="22" height="22" enabled="{redoEnabled}"
+						click="btnRedoClick()"/>
 					<mx:Label text="Input Tags:" y="1" styleName="label" x="87" width="81"/>
 					<mx:TextInput id="inputTag" width="316" x="164" toolTip="Input tags for search" y="1" keyUp="onInputTag(event)"/>
 					<mx:Label text="Max Clusters:" x="659" styleName="label" y="1"/>
