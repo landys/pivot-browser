@@ -4,6 +4,7 @@
 	creationComplete="initApp()">
 	<mx:Script>
 		<![CDATA[
+			import mx.utils.StringUtil;
 			import hisa.vo.PhotoVo;
 			import hisa.event.ClusterClickEvent;
 			import mx.events.ItemClickEvent;
@@ -31,10 +32,10 @@
 			[Embed(source="assets/icon_right_disabled.png")]
 			private const ICON_RIGHT_DISABLED:Class;
 			
-			[Embed(source="assets/undo.png")]
+			[Embed(source="assets/undo_l.png")]
 			private const ICON_UNDO:Class;
 			
-			[Embed(source="assets/redo.png")]		
+			[Embed(source="assets/redo_l.png")]		
 			private const ICON_REDO:Class;
 			
 			// the tags in current seach collection
@@ -358,8 +359,10 @@
 					}
 				}	
 				
-				doFetchClusters();
-
+				if (tagsSearched.length > 0)
+				{
+					doFetchClusters();
+				}
 			}
 			
 			private function doFetchClusters():void
@@ -789,8 +792,8 @@
 			
 			private function onSearchClick():void
 			{
-				var words:String = inputTag.text;
-				if (words.length == 0)
+				var words:String = StringUtil.trim(inputTag.text);
+				/*if (words.length == 0)
 				{
 					return;
 				}
@@ -798,7 +801,17 @@
 				if (ts.length == 0)
 				{
 					return;
+				}*/
+				var ts:Array = null;
+				if (words.length == 0)
+				{
+					ts = [];
 				}
+				else
+				{
+					ts = words.split(/\s+/);
+				}
+				
 				fetchClusters(ts, 6);
 				inputTag.text = "";
 			}
@@ -806,6 +819,14 @@
 			private function onRestartClick():void
 			{
 				gameStart();
+			}
+			
+			private function onInputTag(event:KeyboardEvent):void
+			{
+				if (event.keyCode == Keyboard.ENTER)
+				{
+					onSearchClick();
+				}
 			}
 			
 			
@@ -942,12 +963,14 @@
 			<mx:VBox width="850" height="100%">
 				<mx:Spacer height="8"/>
 				<mx:Canvas width="100%">
-					<mx:Label text="Input Tags:" y="1" styleName="label" x="5" width="99"/>
-					<mx:TextInput id="inputTag" width="297" x="98" toolTip="Input tags for search"/>
-					<mx:Label text="Max Clusters:" x="408" styleName="label" y="1"/>
-					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="508" width="52" />
-					<mx:Button label="Search" x="585" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
-					<mx:Button label="Restart" x="677" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button"/>
+					<mx:Button icon="{ICON_UNDO}" x="5" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true" height="22" width="22"/>
+					<mx:Button icon="{ICON_REDO}" x="36" paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true" width="22" height="22"/>
+					<mx:Label text="Input Tags:" y="1" styleName="label" x="87" width="81"/>
+					<mx:TextInput id="inputTag" width="316" x="164" toolTip="Input tags for search" y="1" keyUp="onInputTag(event)"/>
+					<mx:Label text="Max Clusters:" x="659" styleName="label" y="1"/>
+					<mx:TextInput id="txtMaxClusterNum" text="{maxClusterNum}" toolTip="maxClusterNum" x="749" width="52"  y="1"/>
+					<mx:Button label="Search" x="501" width="66" click="onSearchClick();" buttonMode="true" useHandCursor="true" styleName="button" y="1"/>
+					<mx:Button label="Restart" x="572" width="67" click="onRestartClick();" buttonMode="true" useHandCursor="true" styleName="button" y="1"/>
 				</mx:Canvas>
 				<mx:Canvas id="canCluster" width="100%" height="100%" styleName="relationCanvas"
 					horizontalScrollPolicy="off" verticalScrollPolicy="off">
@@ -985,19 +1008,18 @@
 					<hisa:TagCluster id="clusCenter" index="{CENTER_CLUSTER_INDEX}"
 						clusterClick="centerClusterClickHandler(event)" styleName="clusterCanvasCircle" />	
 						
-					<mx:Label id="lblPicNum" text="Total Pictures: {picNum}" x="672" y="10" width="146" styleName="label" color="#000080"/>
-					<mx:Button icon="{ICON_UNDO}" x="31" y="10" width="49" height="49" paddingLeft="0" toolTip="Undo" buttonMode="true" useHandCursor="true" includeInLayout="true"/>
-					<mx:Button icon="{ICON_REDO}" x="95" y="10" width="49" height="49"  paddingLeft="0" toolTip="Redo" buttonMode="true" useHandCursor="true"/>
+					<mx:Label id="lblPicNum" text="Returned {picNum} Pictures" x="640" y="10" width="189" styleName="label" color="#000080"/>
 		        </mx:Canvas>
 			</mx:VBox>
 		</mx:HBox>
 
 		<!-- image view -->
-		<mx:HBox width="100%" height="100%" verticalAlign="middle" borderStyle="solid">
+		<mx:HBox width="1113" height="100%" verticalAlign="middle" borderStyle="solid"
+			horizontalGap="0">
 			<hisa:TagCluster id="clsWhole" index="{WHOLE_CLUSTER_INDEX}"
 					visible="true" hasPics="true"
 					clusterClick="leftClusterClickHandler(event)"
-					width="210" height="100%" styleName="clusterCanvasWhole" />
+					width="236" height="100%" styleName="clusterCanvasWhole" />
 			<hisa:NavButton source="{ICON_LEFT}"
 				id="navPrevPic"
 				toolTip="Previous Page"

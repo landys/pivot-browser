@@ -38,7 +38,7 @@
 	</mx:Script>
 	
 	<mx:TileList id="tlstPhotos" height="100%" width="100%" 
-        rowHeight="120" columnWidth="120"
+        rowHeight="115" columnWidth="115"
         dataProvider="{photos}" itemRenderer="Thumbnail">
         <!--dragEnabled="true" dropEnabled="true" dragMoveEnabled="true"-->
     </mx:TileList>
@@ -56,5 +56,5 @@
         blurYFrom="5.0" blurYTo="0.0"/>
         
     <mx:Resize id="expand" target="{imgBig}" widthTo="300" heightTo="300"/>
-    <mx:Resize id="contract" target="{imgBig}" widthTo="120" heightTo="120"/>
+    <mx:Resize id="contract" target="{imgBig}" widthTo="115" heightTo="115"/>
 </mx:Canvas>

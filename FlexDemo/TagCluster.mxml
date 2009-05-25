@@ -122,7 +122,6 @@
 			
 			private function initTagCluster(xo:int=0, yo:int=0):void
 			{
-				//trace(index+":TagCluster.initTagCluster() begin");
 				doInitTagCluster(width, height, xo, yo);
 			}
 			
