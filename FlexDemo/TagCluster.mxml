@@ -21,8 +21,17 @@
 			public var pics:ArrayCollection;
 			
 			// the max width of tag.
+			//paper: public var maxItemWidth:int = 110;
 			[Bindable]
 			public var maxItemWidth:int = 72;
+			
+			[Bindable]
+			//paper: public var itemHeight:int = 25;
+			public var moreItemWidth:int = 18;
+			
+			[Bindable]
+			//paper: public var itemHeight:int = 24;26
+			public var itemHeight:int = 20; 
 			
 			// use as the tagCluster id
 			public var index:int;
@@ -193,12 +202,12 @@
 		<mx:Canvas width="100%" height="100%"
 			verticalScrollPolicy="off" horizontalScrollPolicy="off" updateComplete="initTagCluster();">
 			<mx:Repeater id="rp" dataProvider="{tags}">
-				<mx:LinkButton id="lbtns" height="20" maxWidth="{maxItemWidth}"
+				<mx:LinkButton id="lbtns" height="{itemHeight}" maxWidth="{maxItemWidth}"
 					styleName="tagLinkButton"
 				    label="{rp.currentItem.label}" 
 				    click="tagClick(event);"/>
 		    </mx:Repeater>
-		    <mx:LinkButton id="lbtnMore" height="20" width="18"
+		    <mx:LinkButton id="lbtnMore" height="{itemHeight}" width="{moreItemWidth}"
 				styleName="tagLinkButton"
 			    label="..." visible="false"
 			    click="moreClick(event);"/>

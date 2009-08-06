@@ -43,6 +43,7 @@
 			private var tagsSearched:ArrayCollection = new ArrayCollection();
 			
 			// size of each cluster
+			// paper: private const CLUSTER_SIZE:Object = {w:190, h:124}; 128
 			private const CLUSTER_SIZE:Object = {w:190, h:112};
 			
 			// positioin of first cluseter
