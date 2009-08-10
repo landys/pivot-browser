@@ -130,15 +130,31 @@ ToolTip
 	backgroundColor:	#e8e8e8
 }
 
+/*paper: fontSize:		20;*/
 .tagLinkButton
 {
 	color:			#101030;
-	fontFamily:		"Arial";
-	fontSize:		12;
+	fontFamily:		"Times New Roman";
+	fontSize:		14;
 }
 
 .label
 {
-	fontSize:		11;
+	fontSize:		14;
 	fontWeight:		"bold";
+	fontFamily:		"Times New Roman";
+}
+
+RadioButton
+{
+	fontSize:		14;
+	fontWeight:		"bold";
+	fontFamily:		"Times New Roman";
+}
+
+.button
+{
+	fontSize:		14;
+	fontWeight:		"bold";
+	fontFamily:		"Times New Roman";
 }
