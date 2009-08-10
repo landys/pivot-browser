@@ -38,10 +38,10 @@ ID：<input type="text" name="user_id" id="user_id"/><br />
 <input type="radio" name="flickr_expr" value="6个月到1年"/>6个月到1年、
 <input type="radio" name="flickr_expr" value="超过1年" checked="checked"/>超过1年<br />
 你觉得网上搜索图片，最让你觉得不满意的是什么？（多选）<br />
-<input type="checkbox" name="unsatisfaction1" value="专业需求" checked="checked"/>输入检索词；
-<input type="checkbox" name="unsatisfaction2" value="专业需求"/>结果杂乱不相关；
-<input type="checkbox" name="unsatisfaction3" value="专业需求"/>结果相关，但不一定是想要的；
-<input type="checkbox" name="unsatisfaction4" value="专业需求"/>其他（请注明）<input type="text" name="unsatisfaction_text" />
+<input type="checkbox" name="unsatisfaction1" value="输入检索词" checked="checked"/>输入检索词；
+<input type="checkbox" name="unsatisfaction2" value="结果杂乱不相关"/>结果杂乱不相关；
+<input type="checkbox" name="unsatisfaction3" value="结果相关，但不一定是想要的"/>结果相关，但不一定是想要的；
+<input type="checkbox" name="unsatisfaction4" value="其他"/>其他（请注明）<input type="text" name="unsatisfaction_text" />
 <br />
  <br />
 Satisfactory for the whole search process(对整个检索过程是否满意) （单选）：
