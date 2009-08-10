@@ -1,17 +1,14 @@
-<%@ page language="java" contentType="text/html; charset=utf-8"
-    pageEncoding="utf-8"%>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
-<HTML xmlns="http://www.w3.org/1999/xhtml">
-<HEAD>
-	<META http-equiv=Content-Type content="text/html; charset=utf-8"/>
-	<!-- <link rel="stylesheet" href="themes/login.css" type="text/css" media="screen" />-->
-	<script src="scripts/jquery.js"/>
-	<script src="scripts/survey.js"/>
-	<TITLE>问卷调查</TITLE>
-</HEAD>
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script type="text/javascript" src="scripts/jquery.js"></script>
+	<script type="text/javascript" src="scripts/survey.js"></script>
+	<title>问卷调查</title>
+</head>
 
-<BODY>
-
+<body>
 <form id="frmsurvey" method="post" action="save-survey.htm">
 <p>
 ID：<input type="text" name="user_id" id="user_id"/><br />
@@ -191,6 +188,6 @@ Open-ended questions<br />
 <input type="button" value="提交问卷" onclick="submit_survey()"/>
 </p>
 </form>
-</BODY>
+</body>
 
-</HTML>
+</html>
