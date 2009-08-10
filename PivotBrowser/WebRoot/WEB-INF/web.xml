@@ -11,6 +11,16 @@
         <param-value>/WEB-INF/flex/hotfixes,/WEB-INF/flex/jars</param-value>
     </context-param>
 
+	<filter>
+		<filter-name>RoFilter</filter-name>
+		<filter-class>pb.filter.RoFilter</filter-class>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>RoFilter</filter-name>
+		<servlet-name>MessageBrokerServlet</servlet-name>
+	</filter-mapping>
+
     <!-- Http Flex Session attribute and binding listener support -->
     <listener>
         <listener-class>flex.messaging.HttpFlexSession</listener-class>
@@ -80,6 +90,32 @@
         <load-on-startup>10</load-on-startup>
     </servlet>
 
+	<servlet>
+		<servlet-name>PbServlet</servlet-name>
+		<servlet-class>pb.servlet.PbServlet</servlet-class>
+		<init-param>
+			<param-name>surveyPage</param-name>
+			<param-value>/jsps/survey.jsp</param-value>
+		</init-param>
+		<init-param>
+			<param-name>save-surveyCommand</param-name>
+			<param-value>pb.command.SaveSurveyCommand</param-value>
+		</init-param>
+		<init-param>
+			<param-name>save-surveyPage</param-name>
+			<param-value>redirect:survey-result.htm</param-value>
+		</init-param>
+		<init-param>
+			<param-name>survey-resultPage</param-name>
+			<param-value>/jsps/survey-result.jsp</param-value>
+		</init-param>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>PbServlet</servlet-name>
+		<url-pattern>*.htm</url-pattern>
+	</servlet-mapping>
+
     <servlet-mapping>
         <servlet-name>MessageBrokerServlet</servlet-name>
         <url-pattern>/messagebroker/*</url-pattern>
@@ -110,9 +146,12 @@
         <url-pattern>/flex-internal/*</url-pattern>
     </servlet-mapping>
 
+	<session-config>
+        <session-timeout>0</session-timeout>
+    </session-config>
+
     <welcome-file-list>
         <welcome-file>index.html</welcome-file>
-        <welcome-file>index.htm</welcome-file>
     </welcome-file-list>
 
     <!-- for WebSphere deployment, please uncomment -->
