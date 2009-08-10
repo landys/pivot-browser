@@ -2,7 +2,7 @@ package utils;
 
 public class Constants {
 	
-	static public String lucencePath = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/lucence/";
+	static public String lucencePath = "F:/PivotBrowser_Index/origin/lucence/";
 	
 	static public String lucenceTagFieldName = "tags";
 	
@@ -23,7 +23,7 @@ public class Constants {
 	
 	static public String image = "data";
 	
-	static public String synsetIndexDir = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/synsetindex";
+	static public String synsetIndexDir = "F:/PivotBrowser_Index/origin/synsetindex";
 	
 	static public String mergeIndexDir = "./mergedir/";
 	
@@ -38,7 +38,7 @@ public class Constants {
 	
 	static public int numPerPage = 100;
 	
-	static public String dataInputName = "E:/projects/PivotBrowser/codes/trunk/PivotBrowser/dataInputObject";	
+	static public String dataInputName = "F:/PivotBrowser_Index/origin/dataInputObject";	
 	
 	static public int topK = 100;
 	

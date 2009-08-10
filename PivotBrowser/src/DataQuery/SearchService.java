@@ -1,7 +1,5 @@
 package DataQuery;
 
-import java.io.IOException;
-import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.util.ArrayList;
@@ -12,11 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 
-import org.apache.commons.collections.SetUtils;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.Token;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.Term;
@@ -28,10 +21,11 @@ import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TermQuery;
 
+import pb.filter.RoFilter;
+import pb.service.ActionService;
+
 import com.thoughtworks.xstream.XStream;
 
-
-import DataIndex.DataInput;
 import DataIndex.IndexService;
 
 import model.QueryExpension;
@@ -51,6 +45,8 @@ public class SearchService {
     private SelectTag select;
     
     private ClusterTag tagsCluster;
+    
+    private ActionService actionService = new ActionService();
     
     //for test;
     static double averageTagRankTime;
@@ -212,6 +208,10 @@ public class SearchService {
      * 
      */ 
     public List<TagCluster> searchTag (List<String> rawList,int topKInSelectTag, int maxClusterNum, boolean isExpansionWithSynSet, boolean isExpansionWithCoMap, boolean isCluster, int minFreqTime, int topKForExpension) throws Exception, Exception {
+        // save action
+        actionService.saveSearchAction(rawList, RoFilter.sessionIds.get());
+        
+        // do 
         List<QueryExpension> pivotTagList = Utils.convertRawListToPivotTagList(rawList,indexService.getDataInput(),isExpansionWithSynSet, isExpansionWithCoMap, minFreqTime, topKForExpension);
         List<TagCluster> list = new ArrayList<TagCluster>();
         
@@ -311,9 +311,21 @@ public class SearchService {
     /*
      * 根据tagList
      * 随机排
-     * 
+     * @param act 用来统计用户操作，而不是用来检索，同其他函数. 0-log nothing, 1-cluster click, 2-pic page, 3-visual reranking
      */
-    public List<String> getPicUrlForTagsRandom(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
+    public List<String> getPicUrlForTagsRandom(List<String> tagList, List<String> rawPivotList,int page, int act) throws Exception, Exception {
+        // save action
+        switch (act)
+        {
+        case 1:
+            actionService.saveClusterClickAction(tagList, rawPivotList, page, RoFilter.sessionIds.get());
+            break;
+        case 2:
+            actionService.savePicPageAction(page, RoFilter.sessionIds.get());
+            break;
+        }
+        
+        // do 
         List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
         long start = System.currentTimeMillis();
         wrapDocumentList = getWrapDocumentListForTagsRandom(tagList,currentPivot);
@@ -346,7 +358,19 @@ public class SearchService {
      * 拿pic排序过后的url
      * 
      */
-    public List<String> getPicUrlForColorRank(List<String> tagList, int page, String queryPicUrl) throws Exception {
+    public List<String> getPicUrlForColorRank(List<String> tagList, int page, String queryPicUrl, int act) throws Exception {
+        // save action
+        switch (act)
+        {
+        case 2:
+            actionService.savePicPageAction(page, RoFilter.sessionIds.get());
+            break;
+        case 3:
+            actionService.saveVisualRerankAction(queryPicUrl, 1, RoFilter.sessionIds.get());
+            break;
+        }
+        
+        // do 
         //List<WrapDocument> wrapDocumentList = getWrapDocumentListForTagsRank(tagList);
         String url = getRelativeUrl(queryPicUrl);
         System.out.println(url + " page " + page);      
@@ -390,7 +414,19 @@ public class SearchService {
      * 拿pic排序过后的url
      * 
      */
-    public List<String> getPicUrlForWaveLetRank(List<String> tagList, int page, String queryPicUrl) throws Exception {
+    public List<String> getPicUrlForWaveLetRank(List<String> tagList, int page, String queryPicUrl, int act) throws Exception {
+        // save action
+        switch (act)
+        {
+        case 2:
+            actionService.savePicPageAction(page, RoFilter.sessionIds.get());
+            break;
+        case 3:
+            actionService.saveVisualRerankAction(queryPicUrl, 2, RoFilter.sessionIds.get());
+            break;
+        }
+        
+        // do 
         //List<WrapDocument> wrapDocumentList = getWrapDocumentListForTagsRank(tagList);
         String url = getRelativeUrl(queryPicUrl);
         byte [] queryByteArray = getQueryByteArrayByUrl(url,FieldType.WaveLet); 
@@ -836,8 +872,8 @@ public class SearchService {
                     
                     System.out.println(result);
                     
-                    picUrlList = searchService.getPicUrlForColorRank(queryTagList, 0, "/data/293/175681613.jpg");
-                    picUrlList = searchService.getPicUrlForWaveLetRank(queryTagList, 0, "/data/186/144644760.jpg");
+                    picUrlList = searchService.getPicUrlForColorRank(queryTagList, 0, "/data/293/175681613.jpg", 0);
+                    picUrlList = searchService.getPicUrlForWaveLetRank(queryTagList, 0, "/data/186/144644760.jpg", 0);
                     i++;
                 }
             }
