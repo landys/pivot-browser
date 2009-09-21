@@ -505,17 +505,17 @@ public class SelectTag {
                         .intValue());
                 // 对该行的每个非0的元素 遍历
                 for (int i = 0; i < vector.size(); i++) {
-                    Double value = vector.getQuick(i);
+                    double value = vector.getQuick(i);
                     if (value != 0) { // 对value不等于０的每一个
                         String key = idIndex.get(new Long(i)); // 取得该id的对应tag
                         Long times = map.get(key);
                         if (times == null) { // 如果没有出现过
-                            map.put(key, new Long(value.longValue()));
+                            map.put(key, (long)value);
                         } else { // 如果已经出现过 加入现在的到原来的上面
                             times = times.longValue();
                             if(value > times) {  //取最大的次数那个
-                                times = value.longValue();
-                                map.put(key, new Long(times));
+                                times = (long)value;
+                                map.put(key, times);
                             }                           
                         }
                     }

@@ -16,10 +16,13 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Hit;
+import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.HitIterator;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.util.PriorityQueue;
 
 import pb.filter.RoFilter;
 import pb.service.ActionService;
@@ -58,6 +61,10 @@ public class SearchService {
     
     //当前没有rank的全部WrapDocument
     private List<WrapDocument> wrapDocumentList;
+    
+    private static final int MAX_SIZE = 100000;
+    
+    private static final int MAX_TOP_PICS = 1000;
     
 
     //路径
@@ -341,6 +348,7 @@ public class SearchService {
      * 拿pic排序过后的url
      * 
      */
+    @Deprecated
     public List<String> getPicUrlForTagsRank(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
         List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
         long start = System.currentTimeMillis();
@@ -512,9 +520,10 @@ public class SearchService {
      */
     private List<WrapDocument> getWrapDocumentListForTagsRandom(List<String> tagList, List<QueryExpension> currentPivot) {
         
-        List<WrapDocument> wrapDocList = new ArrayList<WrapDocument>();     
+        final List<WrapDocument> wrapDocList = new ArrayList<WrapDocument>();     
+        int pqSize = 0;
         try {
-            IndexSearcher searcher = new IndexSearcher(Constants.lucencePath);
+            final IndexSearcher searcher = new IndexSearcher(Constants.lucencePath);
 
             // 某个cluster中的tag
             BooleanQuery orQuery = new BooleanQuery();
@@ -532,19 +541,44 @@ public class SearchService {
             query.add(orQuery, BooleanClause.Occur.MUST);
             query.add(andQuery, BooleanClause.Occur.MUST);
 
-            Hits hits = searcher.search(query);
+            final PriorityQueue pq = new MyPriorityQueue(MAX_SIZE);
+            
+            searcher.search(query, new HitCollector() {
+                @Override
+                public void collect(int docId, float score) {
+                    try {
+                        if (pq.size() < MAX_SIZE) {
+                            pq.put(new ScoreDoc(docId, score));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            pqSize = pq.size();
+            int n = pqSize < MAX_TOP_PICS ? pqSize : MAX_TOP_PICS;
+            for (int i=0; i<n; ++i) {
+                final ScoreDoc sd = (ScoreDoc)pq.top();
+                final Document doc = searcher.doc(sd.doc);
+                final WrapDocument wrapDoc = new WrapDocument();
+                wrapDoc.setDoc(doc);
+                wrapDocList.add(wrapDoc);
+                pq.pop();
+            }
+            
+            /*Hits hits = searcher.search(query);
             for (HitIterator it = (HitIterator) hits.iterator(); it.hasNext();) {
                 Hit hit = (Hit) it.next();
                 WrapDocument wrapDoc = new WrapDocument();
                 Document doc = hit.getDocument();
                 wrapDoc.setDoc(doc);
                 wrapDocList.add(wrapDoc);
-            }
+            }*/
         } catch (Exception e) {
             e.printStackTrace();
         }
             
-        System.out.println("total pic num for these tag: " + wrapDocList.size());
+        System.out.println("total pic num for these tag: " + pqSize);
             
             
         return wrapDocList; 
@@ -769,7 +803,16 @@ public class SearchService {
         
         private double totalScore;
         
-
+        private int docId;
+        
+        public WrapDocument() {
+            doc = null;
+            tagScore = 0.0;
+            colorScore = 0.0;
+            waveLetScore = 0.0;
+            totalScore = 0.0;
+            docId = 0;
+        }
 
         public double getColorScore() {
             return colorScore;
@@ -809,8 +852,55 @@ public class SearchService {
 
         public void setTagScore(double tagScore) {
             this.tagScore = tagScore;
+        }
+
+        /**
+         * @return Returns the docId.
+         */
+        public int getDocId()
+        {
+            return docId;
+        }
+
+        /**
+         * @param docId The docId to set.
+         */
+        public void setDocId(int docId)
+        {
+            this.docId = docId;
         }       
         
+    }
+    
+    class MyPriorityQueue extends PriorityQueue {
+        
+        public MyPriorityQueue(int maxSize) {
+            initialize(maxSize);
+        }
+        
+        /**
+         * sort in descending order, so lessThan is in the opposite way.
+         */
+        @Override
+        protected boolean lessThan(Object obj1, Object obj2)
+        {
+            boolean re = false;
+            try {
+                final ScoreDoc sd1 = (ScoreDoc)obj1;
+                final ScoreDoc sd2 = (ScoreDoc)obj2;
+                // correct here
+                if (sd1.score > sd2.score
+                        || (sd1.score == sd2.score && sd1.doc < sd2.doc)) {
+                    re = true;
+                }
+            }
+            catch (Exception e) 
+            {
+                e.printStackTrace();
+            }
+            return re;
+        }
+  
     }
     
 
