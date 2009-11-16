@@ -66,6 +66,14 @@ public class SearchService {
     
     private static final int MAX_TOP_PICS = 1000;
     
+    private int topKInSelectTag = Constants.topK;
+    private int maxClusterNum = Constants.maxClusterNum;
+    private boolean isExpansionWithSynSet = true;
+    private boolean isExpansionWithCoMap = true;
+    private boolean isCluster = true;
+    private int minFreqTime = Constants.minFreqTime;
+    private int topKForExpension = Constants.topKForExpension;
+    
 
     //路径
     static private String pathUrl = "../data/"; 
@@ -154,7 +162,8 @@ public class SearchService {
      * 
      */
     public List<TagCluster> searchTag (List<String> rawList) throws Exception {
-        return searchTag(rawList,Constants.topK,Constants.maxClusterNum,true,true,true, Constants.minFreqTime, Constants.topKForExpension);
+        return searchTag(rawList, topKInSelectTag, maxClusterNum, isExpansionWithSynSet, isExpansionWithCoMap, isCluster, minFreqTime, topKForExpension);
+        //return searchTag(rawList,Constants.topK,Constants.maxClusterNum,true,true,true, Constants.minFreqTime, Constants.topKForExpension);
     }
     
     
@@ -215,6 +224,14 @@ public class SearchService {
      * 
      */ 
     public List<TagCluster> searchTag (List<String> rawList,int topKInSelectTag, int maxClusterNum, boolean isExpansionWithSynSet, boolean isExpansionWithCoMap, boolean isCluster, int minFreqTime, int topKForExpension) throws Exception, Exception {
+        this.topKInSelectTag = topKInSelectTag;
+        this.maxClusterNum = maxClusterNum;
+        this.isExpansionWithSynSet = isExpansionWithSynSet;
+        this.isExpansionWithCoMap = isExpansionWithCoMap;
+        this.isCluster = isCluster;
+        this.minFreqTime = minFreqTime;
+        this.topKForExpension = topKForExpension;
+        
         // save action
         actionService.saveSearchAction(rawList, RoFilter.sessionIds.get());
         
@@ -237,8 +254,10 @@ public class SearchService {
        
         select = new SelectTag(topKInSelectTag,pivotTagList,indexService.getDataInput());
         
-        if (isCluster) {
-            tagsCluster = new ClusterTag(maxClusterNum,
+        if (isCluster && pivotNumPic > Constants.MIN_CLUSTER_PICS) {
+            int clusterNum = (pivotNumPic + Constants.MIN_CLUSTER_PICS - 1) / Constants.MIN_CLUSTER_PICS;
+            
+            tagsCluster = new ClusterTag(clusterNum > maxClusterNum ? maxClusterNum : clusterNum,
                     Constants.maxClusterNum, select);
             Map<Set<Long>, Double> clusters = tagsCluster.getClusters();
             // 对每个cluster
@@ -292,6 +311,16 @@ public class SearchService {
                 tagModelList.add(tagModel);
             }
             Collections.sort(tagModelList);
+            
+            tagCluster.setTagList(tagModelList);
+
+            List<String> queryTagList = new ArrayList<String>();
+            for (TagModel tm : tagModelList) {
+                queryTagList.add(tm.getTagName());
+            }
+            List<String> picUrlList = getSamplePicListForClusterRandom(queryTagList,pivotTagList);
+            tagCluster.setPicUrlList(picUrlList);       
+            
             list.add(tagCluster);
             return list;
         }       
@@ -333,7 +362,7 @@ public class SearchService {
         }
         
         // do 
-        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
+        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(), isExpansionWithSynSet, isExpansionWithCoMap, minFreqTime, topKForExpension);
         long start = System.currentTimeMillis();
         wrapDocumentList = getWrapDocumentListForTagsRandom(tagList,currentPivot);
         long end = System.currentTimeMillis();
@@ -350,7 +379,7 @@ public class SearchService {
      */
     @Deprecated
     public List<String> getPicUrlForTagsRank(List<String> tagList, List<String> rawPivotList,int page) throws Exception, Exception {
-        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(),false,  true, Constants.minFreqTime, Constants.topKForExpension);
+        List<QueryExpension> currentPivot = Utils.convertRawListToPivotTagList(rawPivotList,indexService.getDataInput(), isExpansionWithSynSet, isExpansionWithCoMap, minFreqTime, topKForExpension);
         long start = System.currentTimeMillis();
         wrapDocumentList = getWrapDocumentListForTagsRank(tagList,currentPivot);
         long end = System.currentTimeMillis();
