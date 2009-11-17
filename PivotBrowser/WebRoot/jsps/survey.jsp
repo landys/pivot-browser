@@ -3,6 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link href="css/pb.css" type="text/css" rel="stylesheet"></link>
 	<script type="text/javascript" src="scripts/jquery.js"></script>
 	<script type="text/javascript" src="scripts/survey.js"></script>
 	<title>问卷调查</title>
@@ -167,23 +168,23 @@ Do you think the visual reranking（选择图片对结果再排序） is effecti
 <input type="radio" name="pb_rerank" value="5" />(很满意)5</li></ol>
  <br />
 根据你的操作习惯，你对以下组件的看法（多选）：<br />
-<img src="images/pb.png" /> <br/>
+<img src="images/pb.png" /> <br/><br />
 Input Box:
 <input type="checkbox" name="inputbox1" value="实用" />实用、
 <input type="checkbox" name="inputbox2" value="有趣"/>有趣、
-<input type="checkbox" name="inputbox3" value="布局合理"/>布局合理<br />
+<input type="checkbox" name="inputbox3" value="布局合理"/>布局合理<br /><br />
 Navigation Bar: 
 <input type="checkbox" name="nav_bar1" value="实用" />实用、
 <input type="checkbox" name="nav_bar2" value="有趣"/>有趣、
-<input type="checkbox" name="nav_bar3" value="布局合理"/>布局合理<br />
+<input type="checkbox" name="nav_bar3" value="布局合理"/>布局合理<br /><br />
 Picture Box:
 <input type="checkbox" name="pic_box1" value="实用" />实用、
 <input type="checkbox" name="pic_box2" value="有趣"/>有趣、
-<input type="checkbox" name="pic_box3" value="布局合理"/>布局合理<br />
+<input type="checkbox" name="pic_box3" value="布局合理"/>布局合理<br /><br />
 Cluster-view Sidebar:
 <input type="checkbox" name="cluster_sidebar1" value="实用" />实用、
 <input type="checkbox" name="cluster_sidebar2" value="有趣"/>有趣、
-<input type="checkbox" name="cluster_sidebar3" value="布局合理"/>布局合理<br />
+<input type="checkbox" name="cluster_sidebar3" value="布局合理"/>布局合理<br /><br />
 Result Window: 
 <input type="checkbox" name="result_window1" value="实用" />实用、
 <input type="checkbox" name="result_window2" value="有趣"/>有趣、
@@ -191,9 +192,9 @@ Result Window:
  <br />
 Open-ended questions<br />
 从人机交互的角度上考虑，使用本系统你最满意的地方是什么？<br />
-<textarea id="like_best" name="like_best" cols="80" rows="3"></textarea><br />
+<textarea id="like_best" name="like_best" cols="80" rows="3"></textarea><br /><br />
 从人机交互的角度上考虑，使用本系统你最不满意的地方是什么？<br />
-<textarea id="unlike_best" name="unlike_best" cols="80" rows="3"></textarea><br />
+<textarea id="unlike_best" name="unlike_best" cols="80" rows="3"></textarea><br /><br />
 你对PivotBrowser还有其他的意见和建议吗？<br />
 <textarea id="suggestion" name="suggestion" cols="80" rows="5"></textarea><br />
  <br />
